@@ -13,6 +13,7 @@ model RestaurantOwner {
   ownerEmail       String        @unique
   ownerPhoneNumber String        @unique
   ownerPassword    String
+  role             String        @default("Admin")
   restaurants      Restaurant[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -27,8 +28,8 @@ model Restaurant {
   restaurantDescription String
   restaurantAddress     String
 
-  ownerId               Int
-  restaurantOwner       RestaurantOwner  @relation(fields: [ownerId], references: [ownerId])
+  ownerId               Int?
+  restaurantOwner       RestaurantOwner?  @relation(fields: [ownerId], references: [ownerId])
 
 
 
@@ -50,7 +51,7 @@ model Table {
 
   reservations  Reservation[]
 
-  isAvailable   Boolean     @default(true)
+  isAvailable   Boolean?     @default(true)
   
   tableType     String      @default("Regular")
   tableStatus   String      @default("Available")
@@ -70,16 +71,15 @@ model Reservation {
   numberOfGuests    Int
   specialRequests   String?
 
-  reservationTime   DateTime
-  reservationDate   DateTime
+  reservationTime   DateTime    // Single column for date and time
 
-  tableId           Int
-  table             Table       @relation(fields: [tableId], references: [id])
+  tableId           Int?        // Optional
+  table             Table?      @relation(fields: [tableId], references: [id])
 
   restaurantId      Int
   restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
 
-  status            String      @default("Booked")
+  status            String     @default("Booked")
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -125,3 +125,4 @@ model RestaurantStaff {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 }
+

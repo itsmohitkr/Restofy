@@ -7,6 +7,7 @@ const createRestaurant = async (restaurantData) => {
 }
 
 const getRestaurant = async (restaurantId) => {
+    
     return await prisma.restaurant.findUnique({
         where: {
             restaurantId: Number(restaurantId),
@@ -14,22 +15,35 @@ const getRestaurant = async (restaurantId) => {
     });
 };
 
-const updateRestaurant = async (restaurantId, restaurantData) => {
+const updateRestaurant = async (restaurantId, restaurantData,ownerId) => {
     return await prisma.restaurant.update({
-        where: { restaurantId: Number(restaurantId) },
+        where: {
+            restaurantId: Number(restaurantId),
+            ownerId: Number(ownerId),
+         },
         data: restaurantData,
     });
 }
 
-const deleteRestaurant = async (restaurantId) => {
+const deleteRestaurant = async (restaurantId,ownerId) => {
     return await prisma.restaurant.delete({
-        where: { restaurantId: Number(restaurantId) },
+        where: {
+            restaurantId: Number(restaurantId),
+            ownerId: Number(ownerId),
+         },
     });
 
 }
 
-const getAllRestaurants = async () => {
-    return await prisma.restaurant.findMany();
+const getAllRestaurants = async (ownerId) => {
+    return await prisma.restaurant.findMany({
+        where: {
+            ownerId: Number(ownerId),
+        },
+        orderBy: {
+            restaurantName: 'asc',
+        },
+    });
 };
 
 

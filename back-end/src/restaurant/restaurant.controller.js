@@ -1,49 +1,77 @@
 const asyncErrorBoundary = require("../error/asyncErrorBoundary");
-const {successResponse} = require("../utils/responseBody");
+const { successResponse } = require("../utils/responseBody");
 const service = require("./restaurant.service");
-const {StatusCodes} = require("http-status-codes");
+const { StatusCodes } = require("http-status-codes");
 
 const createRestaurant = async (req, res) => {
-    const newRestaurant = await service.createRestaurant(req.body);
-    const response = successResponse(StatusCodes.CREATED, "Restaurant created successfully", newRestaurant);
-    res.status(201).json(response);
+  const tokenData = req.user;
+  const finalRestaurantData = {
+    ...req.body,
+    ownerId: tokenData.ownerId,
+  };
+  const newRestaurant = await service.createRestaurant(finalRestaurantData);
+  const response = successResponse(
+    StatusCodes.CREATED,
+    "Restaurant created successfully",
+    newRestaurant
+  );
+  res.status(201).json(response);
 };
 
 const getRestaurant = async (req, res) => {
-    const restaurant =   res.locals.restaurant;
-    const response = successResponse(StatusCodes.OK, "Restaurant retrieved successfully", restaurant);
-    res.status(StatusCodes.OK).json(response);
-}
+  const restaurant = res.locals.restaurant;
+  const response = successResponse(
+    StatusCodes.OK,
+    "Restaurant retrieved successfully",
+    restaurant
+  );
+  res.status(StatusCodes.OK).json(response);
+};
 
 const updateRestaurant = async (req, res) => {
-    const restaurantId = req.params.restaurantId;
-    const restaurantData = req.body;
-     const updatedDate = {
-       ...res.locals.restaurant,
-       ...restaurantData,
-     };
-    const updatedRestaurant = await service.updateRestaurant(
-      restaurantId,
-      updatedDate
-    );
-    
-    const response = successResponse(StatusCodes.OK, "Restaurant updated successfully", updatedRestaurant);
-    res.status(StatusCodes.OK).json(response);
+  const tokenData = req.user;
+  const ownerId = tokenData.ownerId;
+
+  const { restaurantId } = req.params;
+  const restaurantData = req.body;
+
+  const updatedRestaurant = await service.updateRestaurant(
+    restaurantId,
+    restaurantData,
+    ownerId
+  );
+
+  const response = successResponse(
+    StatusCodes.OK,
+    "Restaurant updated successfully",
+    updatedRestaurant
+  );
+  res.status(StatusCodes.OK).json(response);
 };
 
 const deleteRestaurant = async (req, res) => {
-    const restaurantId = req.params.restaurantId;
-    await service.deleteRestaurant(restaurantId);
-    const response = successResponse(StatusCodes.NO_CONTENT, "Restaurant deleted successfully");
-    res.status(StatusCodes.NO_CONTENT).json(response);
+  const restaurantId = req.params.restaurantId;
+  const tokenData = req.user;
+  const ownerId = tokenData.ownerId;
+  await service.deleteRestaurant(restaurantId, ownerId);
+  const response = successResponse(
+    StatusCodes.NO_CONTENT,
+    "Restaurant deleted successfully"
+  );
+  res.status(StatusCodes.NO_CONTENT).json(response);
 };
 
 const getAllRestaurants = async (req, res) => {
-    const restaurants = await service.getAllRestaurants();
-    const response = successResponse(StatusCodes.OK, "Restaurants retrieved successfully", restaurants);
-    res.status(StatusCodes.OK).json(response);
+  const tokenData = req.user;
+  const ownerId = tokenData.ownerId;
+  const restaurants = await service.getAllRestaurants(ownerId);
+  const response = successResponse(
+    StatusCodes.OK,
+    "Restaurants retrieved successfully",
+    restaurants
+  );
+  res.status(StatusCodes.OK).json(response);
 };
-
 
 const hasValidRestaurantId = (req, res, next) => {
   const { restaurantId } = req.params;
@@ -59,6 +87,8 @@ const hasValidRestaurantId = (req, res, next) => {
 
 const isRestaurantExist = async (req, res, next) => {
   const { restaurantId } = req.params;
+  console.log("Checking if restaurant exists with ID:", restaurantId);
+
   const restaurant = await service.getRestaurant(restaurantId);
   if (!restaurant) {
     return next({
@@ -72,10 +102,22 @@ const isRestaurantExist = async (req, res, next) => {
 };
 
 module.exports = {
-  createRestaurant:asyncErrorBoundary(createRestaurant),
-  getRestaurant: [hasValidRestaurantId, isRestaurantExist, asyncErrorBoundary(getRestaurant)],
-  updateRestaurant: [hasValidRestaurantId, isRestaurantExist, asyncErrorBoundary(updateRestaurant)],
-  deleteRestaurant: [hasValidRestaurantId, isRestaurantExist, asyncErrorBoundary(deleteRestaurant)],
-  getAllRestaurants:asyncErrorBoundary(getAllRestaurants),
+  createRestaurant: asyncErrorBoundary(createRestaurant),
+  getRestaurant: [
+    hasValidRestaurantId,
+    isRestaurantExist,
+    asyncErrorBoundary(getRestaurant),
+  ],
+  updateRestaurant: [
+    hasValidRestaurantId,
+    isRestaurantExist,
+    asyncErrorBoundary(updateRestaurant),
+  ],
+  deleteRestaurant: [
+    hasValidRestaurantId,
+    isRestaurantExist,
+    asyncErrorBoundary(deleteRestaurant),
+  ],
+  getAllRestaurants: asyncErrorBoundary(getAllRestaurants),
+  isRestaurantExist: asyncErrorBoundary(isRestaurantExist),
 };
-

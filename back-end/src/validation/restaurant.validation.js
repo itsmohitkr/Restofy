@@ -43,12 +43,12 @@ const restaurantSchema = Joi.object({
     "string.max": "Address must be at most 200 characters.",
     "any.required": "Address is required.",
   }),
-  ownerId: Joi.number().integer().required().messages({
-      "number.base": "Owner ID must be a number.",
-      "number.empty": "Owner ID is required.",
-    "number.integer": "Owner ID must be an integer.",
-    "any.required": "Owner ID is required.",
-  }),
+//   ownerId: Joi.number().integer().required().messages({
+//       "number.base": "Owner ID must be a number.",
+//       "number.empty": "Owner ID is required.",
+//     "number.integer": "Owner ID must be an integer.",
+//     "any.required": "Owner ID is required.",
+//   }),
 });
 
 module.exports = { restaurantSchema };

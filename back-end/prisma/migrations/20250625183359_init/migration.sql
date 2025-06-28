@@ -5,6 +5,7 @@ CREATE TABLE "RestaurantOwner" (
     "ownerEmail" TEXT NOT NULL,
     "ownerPhoneNumber" TEXT NOT NULL,
     "ownerPassword" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'Admin',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -20,7 +21,7 @@ CREATE TABLE "Restaurant" (
     "restaurantPhoneNumber" TEXT NOT NULL,
     "restaurantDescription" TEXT NOT NULL,
     "restaurantAddress" TEXT NOT NULL,
-    "ownerId" INTEGER NOT NULL,
+    "ownerId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -119,7 +120,7 @@ CREATE UNIQUE INDEX "RestaurantStaff_staffEmail_key" ON "RestaurantStaff"("staff
 CREATE UNIQUE INDEX "RestaurantStaff_staffPhoneNumber_key" ON "RestaurantStaff"("staffPhoneNumber");
 
 -- AddForeignKey
-ALTER TABLE "Restaurant" ADD CONSTRAINT "Restaurant_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "RestaurantOwner"("ownerId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Restaurant" ADD CONSTRAINT "Restaurant_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "RestaurantOwner"("ownerId") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Table" ADD CONSTRAINT "Table_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("restaurantId") ON DELETE RESTRICT ON UPDATE CASCADE;

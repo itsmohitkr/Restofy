@@ -2,8 +2,7 @@
 const prisma = require("../../prisma/client");
 
 const create = async (ownerData) => {
-    console.log(ownerData);
-    
+
   return await prisma.restaurantOwner.create({
     data: ownerData,
   });

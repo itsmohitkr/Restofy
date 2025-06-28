@@ -4,10 +4,12 @@ const controller = require("./restaurant.controller");
 const menuController = require("../menu/menu.controller");
 
 const { restaurantSchema } = require("../validation/restaurant.validation");
+
 const tableRoutes = require("../tables/table.router");
 const reservationRoutes = require("../reservation/reservation.router");
 const menuRoutes = require("../menu/menu.router");
 const menuItemRoutes = require("../menuItem/menuItem.router");
+
 const validate = require("../middleware/validate");
 const methodNotAllowed = require("../error/methodNotAllowed");
 

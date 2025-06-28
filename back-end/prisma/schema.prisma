@@ -119,6 +119,7 @@ model RestaurantStaff {
   staffRole         String      @default("Staff") // Manager, Waiter, Chef, etc.
   isActive          Boolean     @default(true)
   
+  
   restaurantId      Int
   restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
   

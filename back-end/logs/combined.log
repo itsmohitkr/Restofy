@@ -1,0 +1,68 @@
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:37:17.712Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:37:17.714Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:37:23.706Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:37:23.709Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:27.491Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:27.493Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:29.531Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:29.533Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:32.339Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:32.341Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:33.490Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:33.493Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:40.051Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:40.053Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:48.887Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:48.889Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:55.526Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:55.528Z"}
+info: ✅ Prisma migration success. {"timestamp":"2025-06-28T11:39:59.537Z"}
+info: 🚀 Restofy server is running at http://localhost:3001 {"timestamp":"2025-06-28T11:39:59.539Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-28T11:42:42.127Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-28T11:42:42.630Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-28T11:49:10.520Z"}
+info: Initializing Express app and middleware... {"timestamp":"2025-06-28T11:50:56.527Z"}
+info: CORS middleware enabled {"timestamp":"2025-06-28T11:50:56.530Z"}
+info: Cookie parser middleware enabled {"timestamp":"2025-06-28T11:50:56.530Z"}
+info: JSON body parser middleware enabled {"timestamp":"2025-06-28T11:50:56.531Z"}
+info: URL-encoded body parser middleware enabled {"timestamp":"2025-06-28T11:50:56.531Z"}
+info: Morgan HTTP request logger enabled {"timestamp":"2025-06-28T11:50:56.531Z"}
+info: API rate limiter middleware enabled {"timestamp":"2025-06-28T11:50:56.616Z"}
+info: Auth routes enabled at /api/auth {"timestamp":"2025-06-28T11:50:56.616Z"}
+info: Authentication middleware enabled for protected routes {"timestamp":"2025-06-28T11:50:56.617Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T11:50:56.617Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T11:50:56.617Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T11:50:56.617Z"}
+info: Initializing Express app and middleware... {"timestamp":"2025-06-28T11:51:22.079Z"}
+info: CORS middleware enabled {"timestamp":"2025-06-28T11:51:22.082Z"}
+info: Cookie parser middleware enabled {"timestamp":"2025-06-28T11:51:22.082Z"}
+info: JSON body parser middleware enabled {"timestamp":"2025-06-28T11:51:22.082Z"}
+info: URL-encoded body parser middleware enabled {"timestamp":"2025-06-28T11:51:22.082Z"}
+info: Morgan HTTP request logger enabled {"timestamp":"2025-06-28T11:51:22.082Z"}
+info: API rate limiter middleware enabled {"timestamp":"2025-06-28T11:51:22.165Z"}
+info: Auth routes enabled at /api/auth {"timestamp":"2025-06-28T11:51:22.165Z"}
+info: Authentication middleware enabled for protected routes {"timestamp":"2025-06-28T11:51:22.165Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T11:51:22.166Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T11:51:22.166Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T11:51:22.166Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T11:52:11.090Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T11:52:11.092Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T11:52:11.093Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:19:03.136Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:19:03.138Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:19:03.138Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:31:31.754Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:31:31.756Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:31:31.756Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:34:15.594Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:34:15.595Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:15.596Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:34:38.240Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:34:38.241Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:38.242Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:34:42.179Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:34:42.181Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:42.181Z"}
+info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:34:48.630Z"}
+info: Path not found middleware enabled {"timestamp":"2025-06-28T13:34:48.631Z"}
+info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:48.632Z"}

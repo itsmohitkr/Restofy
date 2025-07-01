@@ -66,3 +66,10 @@ info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:42.181Z"}
 info: Restaurant routes enabled at /api/restaurants {"timestamp":"2025-06-28T13:34:48.630Z"}
 info: Path not found middleware enabled {"timestamp":"2025-06-28T13:34:48.631Z"}
 info: Error handler middleware enabled {"timestamp":"2025-06-28T13:34:48.632Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /favicon.ico {"timestamp":"2025-06-28T18:30:30.979Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /logo192.png {"timestamp":"2025-06-28T18:30:31.901Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/auth/signup {"timestamp":"2025-06-28T18:30:51.652Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/auth/login {"timestamp":"2025-06-28T18:31:37.726Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-29T17:17:54.218Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-29T17:18:08.955Z"}
+warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/6 {"timestamp":"2025-06-29T17:27:28.503Z"}

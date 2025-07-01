@@ -34,11 +34,37 @@ const updateReservation = async (reservationId, reservationData, restaurantId) =
   });
 };
 
+const assignReservationToTable = async (tableId, reservationId) => {
+  return await prisma.$transaction(async (prisma) => {
+    const updatedReservation = await prisma.reservation.update({
+      where: {
+        id: Number(reservationId),
+      },
+      data: {
+        tableId: Number(tableId),
+      },
+    });
+    const updatedTable = await prisma.table.update({
+      where: {
+        id: Number(tableId),
+      },
+      data: {
+        tableStatus: "Occupied",
+      },
+    });
+    return {
+      updatedReservation,
+      updatedTable,
+    };
+  });
+};
+
 
 
 module.exports = {
   createReservation,
   getAllReservations,
   getReservation,
-  updateReservation
+    updateReservation,
+    assignReservationToTable,
 };

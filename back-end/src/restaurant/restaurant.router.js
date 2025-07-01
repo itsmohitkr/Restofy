@@ -12,8 +12,12 @@ const menuItemRoutes = require("../menuItem/menuItem.router");
 
 const validate = require("../middleware/validate");
 const methodNotAllowed = require("../error/methodNotAllowed");
+const { attachOwnerId } = require("../middleware/attachOwnerId");
 
-router.use("/:restaurantId/table", controller.isRestaurantExist, tableRoutes);
+router.use(attachOwnerId); // Attach ownerId to req object for further use
+
+router.use("/:restaurantId/table", tableRoutes);
+
 router.use(
   "/:restaurantId/reservations",
   controller.isRestaurantExist,

@@ -29,7 +29,7 @@ model Restaurant {
   restaurantAddress     String
 
   ownerId               Int?
-  restaurantOwner       RestaurantOwner?  @relation(fields: [ownerId], references: [ownerId])
+  restaurantOwner       RestaurantOwner?  @relation(fields: [ownerId], references: [ownerId], onDelete: Cascade)
 
 
 
@@ -43,11 +43,11 @@ model Restaurant {
 
 model Table {
   id            Int         @id @default(autoincrement())
-  tableName     String
+  tableName     String      @unique
   tableCapacity Int
 
   restaurantId  Int
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
+  restaurant    Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
 
   reservations  Reservation[]
 
@@ -74,10 +74,10 @@ model Reservation {
   reservationTime   DateTime    // Single column for date and time
 
   tableId           Int?        // Optional
-  table             Table?      @relation(fields: [tableId], references: [id])
+  table             Table?      @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   restaurantId      Int
-  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
+  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
 
   status            String     @default("Booked")
 
@@ -89,7 +89,7 @@ model Menu{
   id                Int         @id @default(autoincrement())
   
   restaurantId      Int         @unique
-  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
+  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
   menuItems         MenuItem[]
 
   createdAt         DateTime    @default(now())
@@ -104,7 +104,7 @@ model MenuItem {
   itemImage         String?
 
   menuId            Int
-  menu              Menu        @relation(fields: [menuId], references: [id])
+  menu              Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -118,10 +118,10 @@ model RestaurantStaff {
   staffPassword     String
   staffRole         String      @default("Staff") // Manager, Waiter, Chef, etc.
   isActive          Boolean     @default(true)
-  
+
   
   restaurantId      Int
-  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
+  restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
   
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt

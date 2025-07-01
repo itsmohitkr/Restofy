@@ -7,16 +7,14 @@ const createTable = async (tableData) => {
     });
 }
 
-const getAllTables = async (restaurantId) => {
+const getAllTables = async (filter) => {
     return await prisma.table.findMany({
-        where: {
-            restaurantId: Number(restaurantId),
-        },
+        where: filter,
         orderBy: {
             tableName: 'asc',
         },
     });
-}
+};
 const getTableById = async (tableId,restaurantId) => {
     return await prisma.table.findUnique({
         where: {
@@ -44,18 +42,27 @@ const deleteTable = async (tableId, restaurantId) => {
     });
 }
 
-const getTableByTableType = async (tableType, restaurantId) => {
+const searchTablesByKeyword = async (keyword, restaurantId) => {
     return await prisma.table.findMany({
         where: {
-            tableType: tableType,
             restaurantId: Number(restaurantId),
+            OR: [
+                { tableName: { contains: keyword, mode: 'insensitive' } },
+                { tableType: { contains: keyword, mode: 'insensitive' } },
+                { tableStatus: { contains: keyword, mode: 'insensitive' } },
+            ],
         },
         orderBy: {
             tableName: 'asc',
         },
     });
-};
+}
 
+const getTableByName = async (tableName, restaurantId) => {
+    return await prisma.table.findFirst({
+        where: { tableName, restaurantId: Number(restaurantId) },
+    });
+}
 
 
 module.exports = {
@@ -63,6 +70,7 @@ module.exports = {
   getAllTables,
   getTableById,
   updateTable,
-    deleteTable,
-  getTableByTableType,
+  deleteTable,
+  searchTablesByKeyword,
+  getTableByName,
 };  

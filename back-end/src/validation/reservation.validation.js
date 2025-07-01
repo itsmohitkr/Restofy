@@ -1,29 +1,5 @@
 const Joi = require("joi");
-const { restaurant } = require("../../prisma/client");
 
-// model Reservation {
-//   id                Int         @id @default(autoincrement())
-//   firstName         String
-//   lastName          String
-//   email             String
-//   contact           String
-  
-//   numberOfGuests    Int
-//   specialRequests   String?
-
-//   reservationTime   DateTime    // Single column for date and time
-
-//   tableId           Int?        // Optional
-//   table             Table?      @relation(fields: [tableId], references: [id])
-
-//   restaurantId      Int
-//   restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId])
-
-//   status            String      @default("Booked") // Optional in API, default in DB
-
-//   createdAt         DateTime    @default(now())
-//   updatedAt         DateTime    @updatedAt
-// }
 
 const reservationSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).required().messages({
@@ -67,9 +43,25 @@ const reservationSchema = Joi.object({
         "string.max": "Special requests must be at most 500 characters."
     }),
     
-    reservationTime: Joi.date().iso().required().messages({
+    reservationTime: Joi.date().iso().greater('now').required().custom((value, helpers) => {
+        const date = new Date(value);
+        const day = date.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 2 = Tuesday
+        const hour = date.getUTCHours();
+        // Check for Tuesday (2)
+        if (day === 2) {
+            return helpers.error('date.closedTuesday');
+        }
+        // Check for closed hours: 11:00 p.m. (23) to 8:59 a.m. (8)
+        if (hour >= 23 || hour < 9) {
+            return helpers.error('date.closedHours');
+        }
+        return value;
+    }).messages({
         'date.base': 'Reservation time must be a valid date.',
         'date.format': 'Reservation time must be in ISO format (YYYY-MM-DDTHH:mm:ssZ).',
+        'date.greater': 'Reservation time must be in the future.',
+        'date.closedTuesday': 'Restaurant is closed on Tuesdays. Please select another day.',
+        'date.closedHours': 'Restaurant is closed between 11:00 p.m. and 9:00 a.m. Please select a time during open hours.',
         'any.required': 'Reservation time is required.'
     }),
     

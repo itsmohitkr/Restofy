@@ -3,161 +3,233 @@ const service = require("./table.service");
 const { StatusCodes } = require("http-status-codes");
 const { successResponse } = require("../utils/responseBody");
 const { isRestaurantExist } = require("../restaurant/restaurant.controller");
+const {
+  sendSuccessResponse,
+  sendErrorResponse,
+} = require("../utils/responseHelpers");
+const { validateParam } = require("../middleware/validateParam");
+const { boolean } = require("joi");
 
 const createTable = async (req, res) => {
-    console.log("Creating table with data:", req.body);
-    
-    const tableData = req.body;
-    const tokenData = req.user;
-    
-    const restaurantData = res.locals.restaurant;
+  const tableData = {
+    ...req.body,
+    restaurantId: req.restaurantId,
+  };
 
-    if (restaurantData.ownerId == tokenData.ownerId) {
-        tableData.restaurantId = restaurantData.restaurantId;
-    } else {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to create a table for this restaurant",
-            error: "Permission Denied"
-        });
-    }
-    
-    
-    const newTable = await service.createTable(tableData);
-    const response = successResponse(StatusCodes.CREATED, "Table created successfully", newTable);
-    res.status(StatusCodes.CREATED).json(response);
-}
+  if (tableData.tableStatus !== "Available") {
+    return sendErrorResponse(
+      res,
+      StatusCodes.BAD_REQUEST,
+      "Table status must be 'Available' when creating a new table",
+      "Invalid Table Status"
+    );
+  }
+  const newTable = await service.createTable(tableData);
+  sendSuccessResponse(
+    res,
+    StatusCodes.CREATED,
+    "Table created successfully",
+    newTable
+  );
+};
 
 const getAllTables = async (req, res) => {
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const restaurantData = res.locals.restaurant;
-    if (restaurantData.ownerId !== ownerId) {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to view tables for this restaurant",
-            error: "Permission Denied"
-        });
-    }
+  const { tableName, tableStatus, tableCapacity, tableType } = req.query;
+  const filter = {
+    restaurantId: Number(req.restaurantId),
+    ...(tableName && { tableName }),
+    ...(tableStatus && { tableStatus }),
+    ...(tableCapacity && { tableCapacity: Number(tableCapacity) }),
+    ...(tableType && { tableType }),
+  };
 
-    const restaurantId = restaurantData.restaurantId;
-    const tables = await service.getAllTables(restaurantId);
-    const response = successResponse(StatusCodes.OK, "Tables retrieved successfully", tables);
-    res.status(StatusCodes.OK).json(response);
+  const tables = await service.getAllTables(filter);
+
+  sendSuccessResponse(
+    res,
+    StatusCodes.OK,
+    "Tables retrieved successfully",
+    tables
+  );
 };
 
 const getTable = async (req, res) => {
-    const table = res.locals.table;
-    const response = successResponse(StatusCodes.OK, "Table retrieved successfully", table);
-    res.status(StatusCodes.OK).json(response);
+  const table = res.locals.table;
+  sendSuccessResponse(
+    res,
+    StatusCodes.OK,
+    "Table retrieved successfully",
+    table
+  );
 };
 
-const hasValidTableId = (req, res, next) => {
+const updateTable = async (req, res) => {
   const { tableId } = req.params;
-  if (!tableId || isNaN(tableId)) {
-    return next({
-      status: StatusCodes.BAD_REQUEST,
-      message: "Invalid table ID",
-      error: "Validation Error"
-    });
-  }
-  next();
-};
-const isTableExist = async (req, res, next) => {
-    const { tableId } = req.params;
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const restaurantData = res.locals.restaurant;
-    const restaurantId = restaurantData.restaurantId;
-    if (restaurantData.ownerId !== ownerId) {
-        return next({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to access this table",
-            error: "Permission Denied"
-        });
-    }
+  const restaurantId = req.restaurantId;
+  const tableData = { ...req.body, restaurantId };
 
-    const table = await service.getTableById(tableId, restaurantId);
+  const updatedTable = await service.updateTable(tableId, tableData);
+
+  sendSuccessResponse(
+    res,
+    StatusCodes.OK,
+    "Table updated successfully",
+    updatedTable
+  );
+};
+
+const deleteTable = async (req, res) => {
+  const { tableId } = req.params;
+  await service.deleteTable(tableId, req.restaurantId);
+  sendSuccessResponse(
+    res,
+    StatusCodes.NO_CONTENT,
+    "Table deleted successfully",
+    null
+  );
+};
+const searchTablesByKeyword = async (req, res) => {
+  const { keyword } = req.query;
+  if (!keyword) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.BAD_REQUEST,
+      "Keyword query parameter is required",
+      "Missing Keyword"
+    );
+  }
+
+  const tables = await service.searchTablesByKeyword(keyword, req.restaurantId);
+
+  if (tables.length === 0) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.NOT_FOUND,
+      "No tables found matching the keyword",
+      "No Tables Found"
+    );
+  }
+
+  sendSuccessResponse(
+    res,
+    StatusCodes.OK,
+    "Tables retrieved successfully",
+    tables
+  );
+};
+
+const assignReservationToTable = async (req, res) => {
+    const { reservationId } = req.query;
+    const { tableId } = req.params;
+    const restaurantId = req.restaurantId;
+    const table = res.locals.table;
+    if (!reservationId) {
+        return sendErrorResponse(
+            res,
+            StatusCodes.BAD_REQUEST,
+            "Reservation ID is required",
+            "Missing Reservation ID"
+        );
+    }
+    const reservation = await service.getReservationById(
+      reservationId,
+      restaurantId
+    );
+    if (!reservation) {
+        return sendErrorResponse(
+            res,
+            StatusCodes.NOT_FOUND,
+            `Reservation not found with ID: ${reservationId}`,
+            "Reservation Not Found"
+        );
+    }
+    if (reservation.tableId) {
+        return sendErrorResponse(
+            res,
+            StatusCodes.BAD_REQUEST,
+            "Reservation is already assigned to a table",
+            "Reservation Already Assigned"
+        );
+    }
+    if (table.tableStatus !== "Available") {
+      return sendErrorResponse(
+        res,
+        StatusCodes.BAD_REQUEST,
+        "Table is not available for reservation",
+        "Table Not Available"
+      );
+    }
+    // tableCapacity check
+    if (table.tableCapacity < reservation.numberOfGuests) {
+        return sendErrorResponse(
+            res,
+            StatusCodes.BAD_REQUEST,
+            "Table capacity is less than the number of guests in the reservation",
+            "Insufficient Table Capacity"
+        );
+    }
     
+    const updatedTable = await service.assignReservationToTable(
+      tableId,
+      reservationId,
+      restaurantId
+    );
+    sendSuccessResponse(
+      res,
+      StatusCodes.OK,
+      "Reservation assigned to table and table status updated",
+      updatedTable
+    );
+};
+
+const isTableExist = async (req, res, next) => {
+  const { tableId } = req.params;
+  const table = await service.getTableById(tableId, req.restaurantId);
+
   if (!table) {
     return next({
       status: StatusCodes.NOT_FOUND,
-      message: "Table not found",
-      error: "resource not found"
+      message: `Table not found with ID: ${tableId}`,
+      error: "Resource Not Found",
     });
   }
   res.locals.table = table;
   next();
 };
+const hasUniqueTableName = async (req, res, next) => {
+  const { tableName } = req.body;
 
-const updateTable = async (req, res) => {
-    const tableData = req.body;
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const { tableId } = req.params;
-    const restaurantData = res.locals.restaurant;
-    if (restaurantData.ownerId !== ownerId) {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to update this table",
-            error: "Permission Denied"
-        });
-    }
-    tableData.restaurantId = restaurantData.restaurantId;
-    
-    const updatedTable = await service.updateTable(tableId, tableData);
-    
-    const response = successResponse(StatusCodes.OK, "Table updated successfully", updatedTable);
-    res.status(StatusCodes.OK).json(response);
+  const existingTable = await service.getTableByName(
+    tableName,
+    req.restaurantId
+  );
+  if (existingTable) {
+    return next({
+      status: StatusCodes.CONFLICT,
+      message: `Table with name "${tableName}" already exists in this restaurant.`,
+      error: "Conflict",
+    });
+  }
+  next();
 };
-
-const deleteTable = async (req, res) => {
-    const { tableId } = req.params;
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const restaurantData = res.locals.restaurant;
-    if (restaurantData.ownerId !== ownerId) {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to delete this table",
-            error: "Permission Denied"
-        });
-    }
-    const restaurantId = restaurantData.restaurantId;
-    
-    await service.deleteTable(tableId, restaurantId);
-    
-    const response = successResponse(StatusCodes.NO_CONTENT, "Table deleted successfully");
-    res.status(StatusCodes.NO_CONTENT).json(response);
-};
-
-const getTableByTableType = async (req, res) => {
-    const { tableType } = req.params;
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const restaurantData = res.locals.restaurant;
-
-    if (restaurantData.ownerId !== ownerId) {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to view tables of this type",
-            error: "Permission Denied"
-        });
-    }
-
-    const restaurantId = restaurantData.restaurantId;
-    const tables = await service.getTableByTableType(tableType, restaurantId);
-    
-    const response = successResponse(StatusCodes.OK, "Tables retrieved successfully", tables);
-    res.status(StatusCodes.OK).json(response);
-};
-
 module.exports = {
-  createTable: asyncErrorBoundary(createTable),
+  createTable: [hasUniqueTableName, asyncErrorBoundary(createTable)],
   getAllTables: asyncErrorBoundary(getAllTables),
-  getTable: [hasValidTableId, isTableExist, asyncErrorBoundary(getTable)],
-  updateTable: [hasValidTableId, isTableExist, asyncErrorBoundary(updateTable)],
-    deleteTable: [hasValidTableId, isTableExist, asyncErrorBoundary(deleteTable)],
-  getTableByTableType
-};  
+  getTable: [
+    validateParam("tableId"),
+    isTableExist,
+    asyncErrorBoundary(getTable),
+  ],
+  updateTable: [
+    validateParam("tableId"),
+    isTableExist,
+    asyncErrorBoundary(updateTable),
+  ],
+  deleteTable: [
+    validateParam("tableId"),
+    isTableExist,
+    asyncErrorBoundary(deleteTable),
+  ],
+  searchTablesByKeyword: [asyncErrorBoundary(searchTablesByKeyword)],
 
+};

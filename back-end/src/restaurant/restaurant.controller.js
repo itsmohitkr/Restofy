@@ -1,99 +1,87 @@
 const asyncErrorBoundary = require("../error/asyncErrorBoundary");
-const { successResponse } = require("../utils/responseBody");
+// const { successResponse, errorResponse } = require("../utils/responseBody");
 const service = require("./restaurant.service");
 const { StatusCodes } = require("http-status-codes");
+const {
+  sendSuccessResponse,
+  sendErrorResponse,
+} = require("../utils/responseHelpers");
+const { requireBody } = require("../middleware/requireBody");
+const { validateParam } = require("../middleware/validateParam");
 
 const createRestaurant = async (req, res) => {
-  const tokenData = req.user;
   const finalRestaurantData = {
     ...req.body,
-    ownerId: tokenData.ownerId,
+    ownerId: req.ownerId,
   };
   const newRestaurant = await service.createRestaurant(finalRestaurantData);
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.CREATED,
     "Restaurant created successfully",
     newRestaurant
   );
-  res.status(201).json(response);
 };
 
 const getRestaurant = async (req, res) => {
   const restaurant = res.locals.restaurant;
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.OK,
     "Restaurant retrieved successfully",
     restaurant
   );
-  res.status(StatusCodes.OK).json(response);
 };
 
 const updateRestaurant = async (req, res) => {
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-
   const { restaurantId } = req.params;
-  const restaurantData = req.body;
+    const restaurantData = req.body;
 
   const updatedRestaurant = await service.updateRestaurant(
     restaurantId,
     restaurantData,
-    ownerId
+    req.ownerId
   );
-
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.OK,
     "Restaurant updated successfully",
     updatedRestaurant
   );
-  res.status(StatusCodes.OK).json(response);
 };
 
 const deleteRestaurant = async (req, res) => {
-  const restaurantId = req.params.restaurantId;
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-  await service.deleteRestaurant(restaurantId, ownerId);
-  const response = successResponse(
+  const { restaurantId } = req.params;
+
+  await service.deleteRestaurant(restaurantId, req.ownerId);
+  sendSuccessResponse(
+    res,
     StatusCodes.NO_CONTENT,
-    "Restaurant deleted successfully"
+    "Restaurant deleted successfully",
+    null
   );
-  res.status(StatusCodes.NO_CONTENT).json(response);
 };
 
 const getAllRestaurants = async (req, res) => {
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-  const restaurants = await service.getAllRestaurants(ownerId);
-  const response = successResponse(
+    const restaurants = await service.getAllRestaurants(req.ownerId);
+    console.log("Retrieved Restaurants:", restaurants);
+    
+  sendSuccessResponse(
+    res,
     StatusCodes.OK,
     "Restaurants retrieved successfully",
     restaurants
   );
-  res.status(StatusCodes.OK).json(response);
-};
-
-const hasValidRestaurantId = (req, res, next) => {
-  const { restaurantId } = req.params;
-  if (!restaurantId || isNaN(restaurantId)) {
-    return next({
-      status: StatusCodes.BAD_REQUEST,
-      message: "Invalid restaurant ID",
-      error: "Validation Error",
-    });
-  }
-  next();
 };
 
 const isRestaurantExist = async (req, res, next) => {
   const { restaurantId } = req.params;
-  console.log("Checking if restaurant exists with ID:", restaurantId);
 
-  const restaurant = await service.getRestaurant(restaurantId);
+  const restaurant = await service.getRestaurant(restaurantId, req.ownerId);
   if (!restaurant) {
     return next({
       status: StatusCodes.NOT_FOUND,
-      message: `Restaurant with ID ${restaurantId} not found`,
+      message: `Restaurant not found with ID: ${restaurantId}`,
       error: "Resource Not Found",
     });
   }
@@ -102,19 +90,20 @@ const isRestaurantExist = async (req, res, next) => {
 };
 
 module.exports = {
-  createRestaurant: asyncErrorBoundary(createRestaurant),
+  createRestaurant: [requireBody, asyncErrorBoundary(createRestaurant)],
   getRestaurant: [
-    hasValidRestaurantId,
+    validateParam("restaurantId"),
     isRestaurantExist,
     asyncErrorBoundary(getRestaurant),
   ],
   updateRestaurant: [
-    hasValidRestaurantId,
+    requireBody,
+    validateParam("restaurantId"),
     isRestaurantExist,
     asyncErrorBoundary(updateRestaurant),
   ],
   deleteRestaurant: [
-    hasValidRestaurantId,
+    validateParam("restaurantId"),
     isRestaurantExist,
     asyncErrorBoundary(deleteRestaurant),
   ],

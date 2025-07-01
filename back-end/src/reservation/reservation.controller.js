@@ -2,65 +2,39 @@ const asyncErrorBoundary = require("../error/asyncErrorBoundary");
 const { StatusCodes } = require("http-status-codes");
 const service = require("./reservation.service");
 const { successResponse } = require("../utils/responseBody");
+const { requireBody } = require("../middleware/requireBody");
+const { sendSuccessResponse } = require("../utils/responseHelpers");
 
 const createReservation = async (req, res) => {
-    const tokenData = req.user;
-    const ownerId = tokenData.ownerId;
-    const restaurantData = res.locals.restaurant;
-    if (restaurantData.ownerId !== ownerId) {
-        return res.status(StatusCodes.FORBIDDEN).json({
-            status: StatusCodes.FORBIDDEN,
-            message: "You do not have permission to create a reservation for this restaurant",
-            error: "Permission Denied"
-        });
-    }
-    const { restaurantId } = restaurantData;
-
     
     const reservationData = {
         ...req.body,
-        restaurantId: restaurantId,
+        restaurantId: Number(req.restaurantId),
         
     };
+  
     const newReservation = await service.createReservation(reservationData);
-    const response = successResponse(StatusCodes.CREATED, "Reservation created successfully", newReservation);
-    res.status(StatusCodes.CREATED).json(response);
+    sendSuccessResponse(
+        res,
+        StatusCodes.CREATED,
+        "Reservation created successfully",
+        newReservation
+    );
 };
 const getAllReservations = async (req, res) => {
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-  const restaurantData = res.locals.restaurant;
-  if (restaurantData.ownerId !== ownerId) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      status: StatusCodes.FORBIDDEN,
-      message:
-        "You do not have permission to view reservations for this restaurant",
-      error: "Permission Denied",
-    });
-  }
-  const { restaurantId } = restaurantData;
-  const reservations = await service.getAllReservations(restaurantId);
-  const response = successResponse(
-    StatusCodes.OK,
-    "Reservations retrieved successfully",
-    reservations
-  );
-  res.status(StatusCodes.OK).json(response);
+  
+    const reservations = await service.getAllReservations(req.restaurantId);
+    sendSuccessResponse(res, StatusCodes.OK, "Reservations retrieved successfully", reservations);
 };
+
 const getReservation = async (req, res) => {
   const reservation = res.locals.reservation;
-  const response = successResponse(
-    StatusCodes.OK,
-    "Reservation retrieved successfully",
-    reservation
-  );
-  res.status(StatusCodes.OK).json(response);
+    sendSuccessResponse(res, StatusCodes.OK, "Reservation retrieved successfully", reservation);
 };
 const isReservationExists = async (req, res, next) => {
   const { reservationId } = req.params;
-  const restaurantData = res.locals.restaurant;
   const reservation = await service.getReservation(
-    restaurantData.restaurantId,
+    req.restaurantId,
     reservationId
   );
   if (!reservation) {
@@ -74,41 +48,29 @@ const isReservationExists = async (req, res, next) => {
   next();
 };
 const updateReservation = async (req, res) => {
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-  const restaurantData = res.locals.restaurant;
-  if (restaurantData.ownerId !== ownerId) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      status: StatusCodes.FORBIDDEN,
-      message: "You do not have permission to update this reservation",
-      error: "Permission Denied",
-    });
-  }
+  
   const { reservationId } = req.params;
   const reservationData = {
     ...req.body,
-    restaurantId: restaurantData.restaurantId,
+    restaurantId: req.restaurantId,
   };
   const updatedReservation = await service.updateReservation(
       reservationId,
       reservationData,
-        restaurantData.restaurantId
+        req.restaurantId
   );
-  const response = successResponse(
-    StatusCodes.OK,
-    "Reservation updated successfully",
-    updatedReservation
-  );
-  res.status(StatusCodes.OK).json(response);
+
+    sendSuccessResponse(res, StatusCodes.OK, "Reservation updated successfully", updatedReservation);
 };
 
 
 module.exports = {
-  createReservation: asyncErrorBoundary(createReservation),
+  createReservation: [requireBody, asyncErrorBoundary(createReservation)],
   getAllReservations: asyncErrorBoundary(getAllReservations),
   getReservation: [isReservationExists, asyncErrorBoundary(getReservation)],
   updateReservation: [
     isReservationExists,
     asyncErrorBoundary(updateReservation),
   ],
+  // assignReservationToTable: asyncErrorBoundary(assignReservationToTable),
 };

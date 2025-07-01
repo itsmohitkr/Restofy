@@ -160,6 +160,120 @@ How to support multiple user types (owner, staff, customer) without duplicating 
 
 ---
 
+## Blocker: Foreign Key Constraint Violation When Deleting a Restaurant
+
+### Problem
+When attempting to delete a restaurant that has related records (such as tables, menus, or reservations), a foreign key constraint violation occurs. This is because the database enforces referential integrity, preventing deletion of a parent record that is still referenced by child records.
+
+**Example Error:**
+```
+Invalid `prisma.restaurant.delete()` invocation
+Foreign key constraint violated on the constraint: `Table_restaurantId_fkey`
+```
+
+### Cause
+- The `Restaurant` table is referenced by other tables (e.g., `Table`, `Menu`, `Reservation`) via foreign keys.
+- If related records exist, the database will block deletion of the restaurant to maintain data integrity.
+
+### Solutions
+1. **Manually Delete Related Records First**
+   - Before deleting a restaurant, delete all related records in other tables that reference this restaurant.
+   - Example (pseudo-code):
+     ```js
+     await prisma.table.deleteMany({ where: { restaurantId } });
+     await prisma.menu.deleteMany({ where: { restaurantId } });
+     await prisma.reservation.deleteMany({ where: { restaurantId } });
+     await prisma.restaurant.delete({ where: { id: restaurantId } });
+     ```
+
+2. **Use `ON DELETE CASCADE` in Prisma Schema**
+   - Update your `schema.prisma` to use `onDelete: Cascade` for all relations referencing `Restaurant`.
+   - Example:
+     ```prisma
+     model Table {
+       id            Int        @id @default(autoincrement())
+       restaurantId  Int
+       restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+       // ...
+     }
+     ```
+   - After updating the schema, run `npx prisma migrate dev` to apply the changes.
+
+3. **Prevent Deletion and Return a Friendly Error**
+   - Before deleting, check for related records. If any exist, return a user-friendly error message and do not proceed with deletion.
+
+### Recommendation
+Choose the approach that best fits your application's data integrity and user experience requirements. For most production apps, using `ON DELETE CASCADE` is common if you want to allow deleting a restaurant and all its related data automatically.
+
+---
+
+## Blocker: Stale Authentication Cookies/Tokens After Database Reset
+
+### Problem
+After resetting or deleting the database, authentication cookies or tokens stored in the client (e.g., Postman, browser) may still be sent with requests. These tokens may contain user IDs (e.g., ownerId) that no longer exist in the database. As a result, the backend may treat the request as authenticated, but queries using the deleted user ID will return empty results or allow unintended access.
+
+### Why This Happens
+- Authentication tokens (JWTs, cookies) are stateless and remain valid on the client even if the corresponding user is deleted from the database.
+- The backend middleware only decodes the token and does not check if the user still exists in the database.
+
+### Example Scenario
+1. User logs in and receives a token with their ownerId.
+2. The database is reset or the user is deleted.
+3. The client continues to send the old token with requests.
+4. The backend decodes the token, sees the ownerId, and allows the request to proceed, but queries return empty results since the user no longer exists.
+
+### Solution: Always Check User Existence After Decoding Token
+After decoding the token, fetch the user from the database using the ID from the token. If the user does not exist, clear the cookie (if applicable) and return a 401 Unauthorized error.
+
+**Example Middleware (Express + Prisma):**
+```js
+const restrictToAuthenticatedUser = async (req, res, next) => {
+    const token = req.cookies?.token;
+    if (!token) {
+        return next({
+            status: 401,
+            message: "You must be logged in to access this resource",
+            error: "Unauthorized"
+        });
+    }
+    try {
+        const userPayload = getUserFromToken(token);
+        if (!userPayload) {
+            return next({
+                status: 401,
+                message: "Invalid token",
+                error: "Unauthorized"
+            });
+        }
+        // Check if user exists in DB
+        const user = await prisma.user.findUnique({
+            where: { id: userPayload.ownerId }
+        });
+        if (!user) {
+            res.clearCookie("token"); // Optional: clear the cookie
+            return next({
+                status: 401,
+                message: "User no longer exists. Please log in again.",
+                error: "Unauthorized"
+            });
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        return next({
+            status: 401,
+            message: "Invalid token",
+            error: error.message || "Unauthorized"
+        });
+    }
+};
+```
+
+### Recommendation
+**Always check that the user exists in the database after decoding the authentication token.** This ensures that deleted or stale users cannot access protected resources, especially after a database reset or migration.
+
+---
+
 **Summary:**
 Each architectural decision was made to maximize maintainability, security, and scalability, while keeping the codebase easy to understand and extend. When facing a blocker, I researched best practices, evaluated trade-offs, and chose the approach that best fit the project's needs.
 

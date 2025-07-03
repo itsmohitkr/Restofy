@@ -1,19 +1,19 @@
-const prisma = require('../../prisma/client');
+const prisma = require("../../prisma/client");
 
 const createReservation = async (reservationData) => {
-    return await prisma.reservation.create({
-        data: reservationData,
-    });
-}
-const getAllReservations = async (restaurantId) => {
-    return await prisma.reservation.findMany({
-        where: {
-            restaurantId: Number(restaurantId),
-        },
-        orderBy: {
-            reservationTime: 'asc',
-        },
-    });
+  return await prisma.reservation.create({
+    data: reservationData,
+  });
+};
+const getAllReservations = async (filter) => {
+  return await prisma.reservation.findMany({
+    where: {
+      ...filter,
+    },
+    orderBy: {
+      reservationTime: "asc",
+    },
+  });
 };
 const getReservation = async (restaurantId, reservationId) => {
   return await prisma.reservation.findUnique({
@@ -24,7 +24,11 @@ const getReservation = async (restaurantId, reservationId) => {
   });
 };
 
-const updateReservation = async (reservationId, reservationData, restaurantId) => {
+const updateReservation = async (
+  reservationId,
+  reservationData,
+  restaurantId
+) => {
   return await prisma.reservation.update({
     where: {
       id: Number(reservationId),
@@ -42,6 +46,7 @@ const assignReservationToTable = async (tableId, reservationId) => {
       },
       data: {
         tableId: Number(tableId),
+        status: "Seated",
       },
     });
     const updatedTable = await prisma.table.update({
@@ -50,6 +55,7 @@ const assignReservationToTable = async (tableId, reservationId) => {
       },
       data: {
         tableStatus: "Occupied",
+        isAvailable: false,
       },
     });
     return {
@@ -59,12 +65,87 @@ const assignReservationToTable = async (tableId, reservationId) => {
   });
 };
 
-
+const deleteReservation = async (reservationId, restaurantId) => {
+  return await prisma.reservation.delete({
+    where: {
+      id: Number(reservationId),
+      restaurantId: Number(restaurantId),
+    },
+  });
+};
+const getReservationByKeyword = async (keyword, restaurantId) => {
+  return await prisma.reservation.findMany({
+    where: {
+      restaurantId: Number(restaurantId),
+      OR: [
+        { firstName: { contains: keyword, mode: "insensitive" } },
+        { lastName: { contains: keyword, mode: "insensitive" } },
+        { email: { contains: keyword, mode: "insensitive" } },
+        { contact: { contains: keyword, mode: "insensitive" } },
+        { status: { contains: keyword, mode: "insensitive" } },
+        { specialRequests: { contains: keyword, mode: "insensitive" } },
+      ],
+    },
+    orderBy: {
+      reservationTime: "asc",
+    },
+  });
+};
+const getTabelById = async (tableId, restaurantId) => {
+  return await prisma.table.findUnique({
+    where: {
+      id: Number(tableId),
+      restaurantId: Number(restaurantId),
+    },
+  });
+};
+const markReservationAsCompleted = async (reservationId, restaurantId) => {
+  return await prisma.$transaction(async (prisma) => {
+    const updatedReservation = await prisma.reservation.update({
+      where: {
+        id: Number(reservationId),
+        restaurantId: Number(restaurantId),
+      },
+      data: {
+        status: "Completed",
+      },
+    });
+    const updatedTable = await prisma.table.update({
+      where: {
+        id: updatedReservation.tableId,
+      },
+      data: {
+        tableStatus: "Available",
+        isAvailable: true,
+      },
+    });
+    return {
+      updatedReservation,
+      updatedTable,
+    };
+  });
+};
+const cancelReservation = async (reservationId, restaurantId) => {
+  return await prisma.reservation.update({
+      where: {
+        id: Number(reservationId),
+        restaurantId: Number(restaurantId),
+      },
+      data: {
+        status: "Cancelled",
+      },
+    });
+};
 
 module.exports = {
   createReservation,
   getAllReservations,
   getReservation,
-    updateReservation,
-    assignReservationToTable,
+  updateReservation,
+  assignReservationToTable,
+  deleteReservation,
+  getReservationByKeyword,
+  getTabelById,
+  markReservationAsCompleted,
+  cancelReservation,
 };

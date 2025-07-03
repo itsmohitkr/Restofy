@@ -6,7 +6,7 @@ const { StatusCodes } = require("http-status-codes");
  */
 const validateParam = (...paramNames) => (req, res, next) => {
   for (const param of paramNames) {
-    const value = req.params[param];
+    const value = req.params[param] || req.query[param];
     if (!value || isNaN(value)) {
       return next({
         status: StatusCodes.BAD_REQUEST,

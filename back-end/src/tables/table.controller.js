@@ -44,7 +44,14 @@ const getAllTables = async (req, res) => {
   };
 
   const tables = await service.getAllTables(filter);
-
+  if (tables.length === 0) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.NOT_FOUND,
+      "No tables found matching the criteria",
+      "No Tables Found"
+    );
+  }
   sendSuccessResponse(
     res,
     StatusCodes.OK,
@@ -118,69 +125,7 @@ const searchTablesByKeyword = async (req, res) => {
   );
 };
 
-const assignReservationToTable = async (req, res) => {
-    const { reservationId } = req.query;
-    const { tableId } = req.params;
-    const restaurantId = req.restaurantId;
-    const table = res.locals.table;
-    if (!reservationId) {
-        return sendErrorResponse(
-            res,
-            StatusCodes.BAD_REQUEST,
-            "Reservation ID is required",
-            "Missing Reservation ID"
-        );
-    }
-    const reservation = await service.getReservationById(
-      reservationId,
-      restaurantId
-    );
-    if (!reservation) {
-        return sendErrorResponse(
-            res,
-            StatusCodes.NOT_FOUND,
-            `Reservation not found with ID: ${reservationId}`,
-            "Reservation Not Found"
-        );
-    }
-    if (reservation.tableId) {
-        return sendErrorResponse(
-            res,
-            StatusCodes.BAD_REQUEST,
-            "Reservation is already assigned to a table",
-            "Reservation Already Assigned"
-        );
-    }
-    if (table.tableStatus !== "Available") {
-      return sendErrorResponse(
-        res,
-        StatusCodes.BAD_REQUEST,
-        "Table is not available for reservation",
-        "Table Not Available"
-      );
-    }
-    // tableCapacity check
-    if (table.tableCapacity < reservation.numberOfGuests) {
-        return sendErrorResponse(
-            res,
-            StatusCodes.BAD_REQUEST,
-            "Table capacity is less than the number of guests in the reservation",
-            "Insufficient Table Capacity"
-        );
-    }
-    
-    const updatedTable = await service.assignReservationToTable(
-      tableId,
-      reservationId,
-      restaurantId
-    );
-    sendSuccessResponse(
-      res,
-      StatusCodes.OK,
-      "Reservation assigned to table and table status updated",
-      updatedTable
-    );
-};
+
 
 const isTableExist = async (req, res, next) => {
   const { tableId } = req.params;
@@ -231,5 +176,6 @@ module.exports = {
     asyncErrorBoundary(deleteTable),
   ],
   searchTablesByKeyword: [asyncErrorBoundary(searchTablesByKeyword)],
+  isTableExist,
 
 };

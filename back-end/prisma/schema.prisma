@@ -102,6 +102,10 @@ model MenuItem {
   itemDescription   String?
   itemPrice         Float
   itemImage         String?
+  itemCategory      String      @default("General") 
+  itemType          String? 
+  itemStatus        String      @default("Available") 
+  itemRating        Float?     @default(0.0) 
 
   menuId            Int
   menu              Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
@@ -119,7 +123,6 @@ model RestaurantStaff {
   staffRole         String      @default("Staff") // Manager, Waiter, Chef, etc.
   isActive          Boolean     @default(true)
 
-  
   restaurantId      Int
   restaurant        Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
   

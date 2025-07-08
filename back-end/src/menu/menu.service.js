@@ -15,7 +15,13 @@ const getMenu = async (menuId) => {
     }
   });
 };
-
+const getMenuByRestaurantId = async (restaurantId) => {
+  return await prisma.menu.findFirst({
+    where: {
+      restaurantId: Number(restaurantId)
+    }
+  });
+}
 
 const deleteMenu = async (menuId) => {
   return await prisma.menu.delete({ where: { id: Number(menuId) } });
@@ -25,4 +31,5 @@ module.exports = {
   createMenu,
   getMenu,
   deleteMenu,
+  getMenuByRestaurantId
 }; 

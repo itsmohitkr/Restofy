@@ -2,68 +2,69 @@ const service = require("./menu.service");
 const { StatusCodes } = require("http-status-codes");
 const { successResponse } = require("../utils/responseBody");
 const asyncErrorBoundary = require("../error/asyncErrorBoundary");
+const { sendSuccessResponse, sendErrorResponse } = require("../utils/responseHelpers");
+const { validateParam } = require("../middleware/validateParam");
 
+// url: /restaurant/:restaurantId/menu
 const createMenu = async (req, res) => {
-  const tokenData = req.user;
-  const ownerId = tokenData.ownerId;
-  const restaurantData = res.locals.restaurant;
-  if (restaurantData.ownerId !== ownerId) {
-    return res.status(StatusCodes.FORBIDDEN).json({
-      status: StatusCodes.FORBIDDEN,
-      message:
-        "You do not have permission to create a menu for this restaurant",
-      error: "Permission Denied",
-    });
-  }
-  const { restaurantId } = restaurantData;
+  
   const menuData = {
-    restaurantId: restaurantId,
-  };
-
+    restaurantId: req.restaurantId,
+  };  
+  const isMenuExists = await service.getMenuByRestaurantId(req.restaurantId);
+  if (isMenuExists) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.BAD_REQUEST,
+      "Menu already exists for this restaurant, start adding items to the menu",
+      "Bad Request"
+    );
+  }
   const newMenu = await service.createMenu(menuData);
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.CREATED,
     "Menu created successfully",
     newMenu
   );
-  res.status(StatusCodes.CREATED).json(response);
 };
 
 const getMenu = async (req, res) => {
   const menu = res.locals.menu;
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.OK,
     "Menu retrieved successfully",
     menu
   );
-  res.status(StatusCodes.OK).json(response);
 };
 
 const deleteMenu = async (req, res) => {
   const menu = res.locals.menu;
   await service.deleteMenu(menu.id);
-  const response = successResponse(
+  sendSuccessResponse(
+    res,
     StatusCodes.NO_CONTENT,
     "Menu deleted successfully"
   );
-  res.status(StatusCodes.NO_CONTENT).json(response);
 };
 const isMenuExists = async (req, res, next) => {
   const { menuId } = req.params;
   const menu = await service.getMenu(menuId);
   if (!menu) {
-    return res.status(StatusCodes.NOT_FOUND).json({
-      status: StatusCodes.NOT_FOUND,
-      message: "Menu not found with the given ID",
-      error: "Not Found",
-    });
+    return sendErrorResponse(
+      res,
+      StatusCodes.NOT_FOUND,
+      `Menu not found with the given ID: ${menuId}`,
+      "Not Found"
+    );
   }
   res.locals.menu = menu;
   next();
 };
 module.exports = {
   createMenu: asyncErrorBoundary(createMenu),
-  getMenu: [isMenuExists, asyncErrorBoundary(getMenu)],
-  deleteMenu: [isMenuExists, asyncErrorBoundary(deleteMenu)],
+  getMenu: [validateParam("menuId"),isMenuExists, asyncErrorBoundary(getMenu)],
+  deleteMenu: [validateParam("menuId"), isMenuExists, asyncErrorBoundary(deleteMenu)],
   isMenuExists: asyncErrorBoundary(isMenuExists),
 };

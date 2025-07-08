@@ -9,6 +9,7 @@ const { isRestaurantExist } = require('../restaurant/restaurant.controller');
 const { validateParam } = require('../middleware/validateParam');
 const { checkRestaurantOwnership } = require('../middleware/checkRestaurantOwnership');
 const { reservationQuerySchema } = require('../validation/reservationQuerySchema');
+const { requireBody } = require('../middleware/requireBody');
 
 router.use(validateParam("restaurantId"));
 router.use(isRestaurantExist);
@@ -17,20 +18,19 @@ router.use(checkRestaurantOwnership);
 router
     .route('/')
     .get(validate(reservationQuerySchema),controller.getAllReservations)
-    .post(validate(reservationSchema), controller.createReservation)
+    .post(requireBody,validate(reservationSchema), controller.createReservation)
     .all(methodNotAllowed);
 
     router
       .route("/search")
       .get(controller.getResevationByKeyword)
-      .post(validate(reservationSchema), controller.createReservation)
       .all(methodNotAllowed);
 router
-    .route('/:reservationId')
-    .get(controller.getReservation)
-    .put(validate(reservationSchema), controller.updateReservation)
-    .delete(controller.deleteReservation)
-    .all(methodNotAllowed);
+  .route("/:reservationId")
+  .get(controller.getReservation)
+  .put(requireBody,validate(reservationSchema), controller.updateReservation)
+  .delete(controller.deleteReservation)
+  .all(methodNotAllowed);
 
 router
   .route("/:reservationId/assign-table")

@@ -36,7 +36,53 @@ Implement an AI-powered chatbot on the landing page that allows unauthenticated 
 - **Backend:** Node.js/Express, Prisma
 - **Database:** Existing schema, with possible geospatial queries
 
+## Learning: How to Add Custom Error Types for Error Handling
 
+In production-level Node.js/Express apps, it is a best practice to define your own global error type enum or object. This allows you to standardize error handling, make your code more maintainable, and provide consistent error responses across your API.
+
+### Example: Defining a Global Error Type Enum/Object
+
+```js
+// back-end/src/constants/errorTypes.js
+const ERROR_TYPES = {
+  VALIDATION_ERROR: 'ValidationError',
+  MISSING_FIELD: 'MissingField',
+  INVALID_FIELD: 'InvalidField',
+  DUPLICATE_RESOURCE: 'DuplicateResource',
+  RESOURCE_NOT_FOUND: 'ResourceNotFound',
+  UNAUTHORIZED_ACTION: 'UnauthorizedAction',
+  FORBIDDEN: 'Forbidden',
+  CONFLICT: 'Conflict',
+  INVALID_QUERY_PARAM: 'InvalidQueryParam',
+  INVALID_PATH_PARAM: 'InvalidPathParam',
+  UNSUPPORTED_OPERATION: 'UnsupportedOperation',
+  BODY_NOT_ALLOWED: 'BodyNotAllowed',
+  TOO_MANY_REQUESTS: 'TooManyRequests',
+  // ...add more as needed
+};
+module.exports = ERROR_TYPES;
+```
+
+### How to Use
+
+- Import and use these error types in your controllers and middleware when sending error responses:
+
+```js
+const ERROR_TYPES = require('../constants/errorTypes');
+return res.status(400).json({
+  status: 400,
+  message: "Contact number is required",
+  error: ERROR_TYPES.MISSING_FIELD
+});
+```
+
+### Best Practices
+- Use a consistent error format in all responses.
+- Map error types to appropriate HTTP status codes in your error handler.
+- Add new error types as your business logic grows.
+- Optionally, use a library like `http-errors` or `Boom` for protocol-level errors, and your custom enum for business/domain errors.
+
+This approach is widely used in production for clarity, maintainability, and scalability of error handling.
 
 ## Notes
 - This feature is intended for unauthenticated users and should be accessible from the landing page.

@@ -10,10 +10,14 @@ const { validateParam } = require('../middleware/validateParam');
 const { checkRestaurantOwnership } = require('../middleware/checkRestaurantOwnership');
 const { reservationQuerySchema } = require('../validation/reservationQuerySchema');
 const { requireBody } = require('../middleware/requireBody');
+const orderRoutes = require("../order/order.router");
+
 
 router.use(validateParam("restaurantId"));
 router.use(isRestaurantExist);
 router.use(checkRestaurantOwnership);
+
+router.use("/:reservationId/order", orderRoutes);
 
 router
     .route('/')

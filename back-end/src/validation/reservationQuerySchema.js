@@ -29,21 +29,18 @@ const reservationQuerySchema = Joi.object({
       "string.pattern.base": "Contact must be a 10 digit number",
     }),
   status: Joi.string()
-    .valid("Booked", "Cancelled", "Completed", "Seated")
+    .valid("Booked", "Cancelled", "Completed", "Seated", "Order Placed")
     .disallow("")
     .optional()
     .messages({
       "any.only":
-        "Status must be one of the following: 'Booked', 'Cancelled', 'Completed', or 'Seated'",
+        "Status must be one of the following: 'Booked', 'Cancelled', 'Completed', 'Seated', or 'Order Placed'",
+      "string.base": "Status must be a string",
     }),
-  reservationTime: Joi.date()
-    .iso()
-    .disallow("")
-    .optional()
-    .messages({
-        "date.base": "Reservation time must be a valid date",
-        "date.iso": "Reservation time must be in ISO format (YYYY-MM-DDTHH:mm:ssZ)",
-    }),
+  reservationTime: Joi.date().iso().disallow("").optional().messages({
+    "date.base": "Reservation time must be a valid date",
+    "date.iso": "Reservation time must be in ISO format (YYYY-MM-DDTHH:mm:ssZ)",
+  }),
 });
 
 module.exports = { reservationQuerySchema };

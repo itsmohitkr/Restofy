@@ -55,7 +55,6 @@ const assignReservationToTable = async (tableId, reservationId) => {
       },
       data: {
         tableStatus: "Occupied",
-        isAvailable: false,
       },
     });
     return {
@@ -116,7 +115,6 @@ const markReservationAsCompleted = async (reservationId, restaurantId) => {
       },
       data: {
         tableStatus: "Available",
-        isAvailable: true,
       },
     });
     return {

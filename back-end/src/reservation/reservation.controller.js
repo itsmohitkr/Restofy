@@ -338,4 +338,6 @@ module.exports = {
     isReservationExists,
     asyncErrorBoundary(cancelReservation),
   ],
+  isReservationExists: asyncErrorBoundary(isReservationExists),
+  
 };

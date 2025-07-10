@@ -19,11 +19,7 @@ const tableSchema = Joi.object({
     tableType: Joi.string().valid("Regular", "VIP", "Outdoor").default("Regular").messages({
         "any.only": 'Table type must be one of the following: "Regular", "VIP", or "Outdoor".',
     }),
-    // not required
-    isAvailable: Joi.boolean().default(true).messages({
-        "boolean.base": "Availability must be a boolean value.",
-
-    }),
+    
     
     tableStatus: Joi.string().valid("Available", "Reserved", "Occupied").default("Available").messages({
         "any.only": 'Table status must be one of the following: "Available", "Reserved", or "Occupied".',

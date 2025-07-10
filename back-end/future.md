@@ -88,3 +88,104 @@ This approach is widely used in production for clarity, maintainability, and sca
 - This feature is intended for unauthenticated users and should be accessible from the landing page.
 - The chatbot should provide a conversational and user-friendly experience.
 - Consider extensibility for more advanced queries and future AI enhancements. 
+
+## Seeding the Database with JSON Data Using Prisma
+
+You can seed your PostgreSQL database with data from JSON files using Prisma and Node.js. This is useful for development and testing. Here’s how to do it:
+
+### 1. Create Your JSON Data Files
+
+Place your data in JSON files, e.g.:
+
+**prisma/seed-data/menuItems.json**
+```json
+[
+  {
+    "itemName": "Margherita Pizza",
+    "itemDescription": "Classic cheese and tomato pizza",
+    "itemPrice": 9.99,
+    "itemImage": null,
+    "itemCategory": "Main Course",
+    "itemType": "Veg",
+    "itemStatus": "Available",
+    "itemRating": 4.5,
+    "menuId": 1
+  }
+  // ... more items
+]
+```
+
+**prisma/seed-data/reservations.json**
+```json
+[
+  {
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "email": "alice.smith@example.com",
+    "contact": "1234567890",
+    "numberOfGuests": 2,
+    "specialRequests": "Window seat",
+    "reservationTime": "2024-07-02T19:00:00Z",
+    "tableId": null,
+    "restaurantId": 1,
+    "status": "Booked"
+  }
+  // ... more reservations
+]
+```
+
+### 2. Create a Seed Script
+
+**prisma/seed.js**
+```js
+const { PrismaClient } = require('@prisma/client');
+const fs = require('fs');
+const path = require('path');
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Read JSON files
+  const menuItems = JSON.parse(fs.readFileSync(path.join(__dirname, 'seed-data', 'menuItems.json')));
+  const reservations = JSON.parse(fs.readFileSync(path.join(__dirname, 'seed-data', 'reservations.json')));
+
+  // Insert Menu Items
+  for (const item of menuItems) {
+    await prisma.menuItem.create({ data: item });
+  }
+
+  // Insert Reservations
+  for (const reservation of reservations) {
+    await prisma.reservation.create({ data: reservation });
+  }
+}
+
+main()
+  .catch(e => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+```
+
+### 3. Configure Prisma to Use Your Seed Script
+
+In your `package.json` (inside `back-end/`), add:
+```json
+"prisma": {
+  "seed": "node prisma/seed.js"
+}
+```
+
+### 4. Run the Seed Command
+
+From your `back-end/` directory, run:
+```sh
+npx prisma db seed
+```
+
+---
+
+This approach makes it easy to update your seed data and keep your development environment consistent. 

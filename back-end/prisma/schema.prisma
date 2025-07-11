@@ -37,6 +37,7 @@ model Restaurant {
   staff        RestaurantStaff[]
   orders       Order[]
   orderItems   OrderItem[]
+  bills        Bill[]
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 }
@@ -82,6 +83,7 @@ model Reservation {
   status String @default("Booked")
 
   orders Order[]
+  bill   Bill?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -135,39 +137,117 @@ model RestaurantStaff {
 }
 
 enum OrderStatus {
-  Pending
+  Open
   Finalized
   Cancelled
   Paid
 }
-model Order {
-  id          Int      @id @default(autoincrement())
-  status      OrderStatus @default(Pending)
-  totalAmount Float
-  placedAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  tableId     Int?
-  table       Table? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+model Order {
+  id          Int         @id @default(autoincrement())
+  status      OrderStatus @default(Open)
+  totalAmount Float
+  placedAt    DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tableId Int?
+  table   Table? @relation(fields: [tableId], references: [id], onDelete: SetNull)
 
   reservationId Int?
   reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
 
-  restaurantId  Int
-  restaurant    Restaurant   @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
-  orderItems    OrderItem[]
+  restaurantId Int
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
+  orderItems   OrderItem[]
+  bill         Bill?
 }
 
 model OrderItem {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   quantity     Int
   price        Float // Price at the time of order
-  notes String?
+  notes        String?
   menuItemId   Int
-  menuItem     MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem   @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
   orderId      Int
-  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   restaurantId Int
   restaurant   Restaurant @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
 }
 
+enum BillStatus {
+  Unpaid
+  Paid
+  Cancelled
+}
+
+model Bill {
+  id          Int        @id @default(autoincrement())
+  totalAmount Float
+  status      BillStatus @default(Unpaid)
+
+  // Scalar snapshot fields
+  restaurantName        String
+  restaurantEmail       String
+  restaurantPhoneNumber String
+  restaurantAddress     String
+  customerName          String
+  customerPhoneNumber   String
+
+  // Foreign keys for queryability (optional, set null on delete)
+  restaurantId  Int?
+  restaurant    Restaurant?  @relation(fields: [restaurantId], references: [restaurantId], onDelete: SetNull)
+  reservationId Int?         @unique
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  orderId       Int?         @unique
+  order         Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  billItems BillItem[]
+  payments  Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BillItem {
+  id         Int    @id @default(autoincrement())
+  itemName   String
+  menuItemId Int
+  price      Float
+  quantity   Int
+  totalPrice Float
+
+  billId Int
+  bill   Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  Pending
+  Completed
+  Failed
+}
+
+enum PaymentMethod {
+  Cash
+  Card
+  UPI
+}
+
+model Payment {
+  id            Int            @id @default(autoincrement())
+  amount        Float
+  status        PaymentStatus  @default(Pending)
+  method        PaymentMethod
+  paymentDate   DateTime       @default(now())
+  
+  billId Int @unique
+  bill   Bill? @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+  

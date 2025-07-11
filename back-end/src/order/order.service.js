@@ -84,6 +84,31 @@ const getOrderById = async (orderId, restaurantId) => {
   });
 };
 
+async function completeOrder(orderId, restaurantId) {
+ // no transaction needed here
+  return prisma.order.update({
+    where: {
+      id: parseInt(orderId),
+      restaurantId: parseInt(restaurantId),
+    },
+    data: {
+      status: "Finalized",
+    },
+  });
+}
+async function getOpenOrderByReservationId(reservationId, restaurantId) {
+  return prisma.order.findFirst({
+    where: {
+      reservationId: parseInt(reservationId),
+      restaurantId: parseInt(restaurantId),
+      status: "Open",
+    },
+    include: {
+      orderItems: true,
+    },
+  });
+}
+
 module.exports = {
   getMenuItemById,
   createOrder,
@@ -92,4 +117,6 @@ module.exports = {
   createOrderWithItemsAndStatus,
   updateOrderWithItems,
   getOrderById,
+  completeOrder,
+  getOpenOrderByReservationId,
 };

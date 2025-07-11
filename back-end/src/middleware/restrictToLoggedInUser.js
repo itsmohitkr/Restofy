@@ -4,7 +4,6 @@ const prisma = require("../../prisma/client");
 
 const restrictToAuthenticatedUser = async (req, res, next) => {
     const token = req.cookies?.token;
-    console.log("Token from cookies:", token); // Debugging line to check the token
     
   if (!token) {
     return next({

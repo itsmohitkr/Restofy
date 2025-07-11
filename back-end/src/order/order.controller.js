@@ -151,11 +151,11 @@ const updateOrder = async (req, res) => {
   }
 
   const order = res.locals.order;
-  if (order.status !== "Pending") {
+  if (order.status !== "Open") {
     return sendErrorResponse(
       res,
       StatusCodes.BAD_REQUEST,
-      "Order can only be updated if it is in 'Pending' status",
+      "Order can only be updated if it is in 'Open' status",
       "Invalid Order Status"
     );
   }
@@ -207,9 +207,48 @@ const updateOrder = async (req, res) => {
     orderItems: updatedOrder.allOrderItems,
   });
 };
+const completeOrder = async (req, res) => {
+  const { orderId, restaurantId } = req.params;
+  const order = res.locals.order;
+
+  if (order.status !== "Open") {
+    return sendErrorResponse(
+      res,
+      StatusCodes.BAD_REQUEST,
+      "Order can only be completed if it is in 'Open' status",
+      "Invalid Order Status"
+    );
+  }
+
+  const updatedOrder = await service.completeOrder(orderId, restaurantId);
+
+  sendSuccessResponse(
+    res,
+    StatusCodes.OK,
+    "Order completed successfully",
+    updatedOrder
+  );
+};
+
+const isOpenOrder= async (req, res, next) => {
+  const { reservationId, restaurantId } = req.params;
+  const order = await service.getOpenOrderByReservationId(
+    reservationId,
+    restaurantId
+  );
+  if (order) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.BAD_REQUEST,
+      `Open order already exists for reservation ID ${reservationId} in restaurant ID ${restaurantId}`,
+      "Open Order Exists"
+    );
+  }
+  next();
+};
 
 module.exports = {
-  createOrder: [asyncErrorBoundary(createOrder)],
+  createOrder: [isOpenOrder,asyncErrorBoundary(createOrder)],
   getOrder: [
     validateParam("orderId"),
     isOrderExist,
@@ -219,6 +258,12 @@ module.exports = {
     validateParam("orderId"),
     isOrderExist,
     asyncErrorBoundary(updateOrder),
-  ],
+    ],
+  completeOrder: [
+    validateParam("orderId"),
+      isOrderExist,
+    asyncErrorBoundary(completeOrder)],
+    
+    isOrderExist: [validateParam("orderId"), isOrderExist],
   
 };

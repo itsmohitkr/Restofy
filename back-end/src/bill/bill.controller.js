@@ -62,7 +62,6 @@ const createBill = async (req, res) => {
     reservationId: Number(reservationId),
     orderId: Number(orderId),
     totalAmount,
-
   };
   const billItems = [];
   for (const obj of itemVsQuantity) {
@@ -115,7 +114,6 @@ const isBillExist = async (req, res, next) => {
   next();
 };
 const isBillAlreatExist = async (req, res, next) => {
-  
   const { reservationId, orderId } = req.params;
   const bill = await service.getBillByOrderIdAndReservationId(
     reservationId,
@@ -134,6 +132,11 @@ const isBillAlreatExist = async (req, res, next) => {
 
 module.exports = {
   createBill: [isOrderExist, isBillAlreatExist, asyncErrorBoundary(createBill)],
-  getBill: [isOrderExist, validateParam("billId"), isBillExist, asyncErrorBoundary(getBill)],
+  getBill: [
+    isOrderExist,
+    validateParam("billId"),
+    isBillExist,
+    asyncErrorBoundary(getBill),
+  ],
   isBillExist: [isOrderExist, validateParam("billId"), isBillExist],
 };

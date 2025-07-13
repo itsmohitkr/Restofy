@@ -189,3 +189,153 @@ npx prisma db seed
 ---
 
 This approach makes it easy to update your seed data and keep your development environment consistent. 
+
+# Advanced Redis Features for Restofy
+
+Redis is incredibly powerful and can do much more than just caching. Here are advanced Redis features that would be valuable for the Restofy project:
+
+## 1. Session Management
+- **Store user sessions** instead of using JWT tokens or database sessions.
+- **Automatic expiry** for inactive sessions.
+- **Distributed sessions** across multiple server instances.
+
+```js
+// Store session
+await redisClient.setEx(`session:${sessionId}`, 3600, JSON.stringify(userData));
+
+// Get session
+const session = await redisClient.get(`session:${sessionId}`);
+```
+
+## 2. Rate Limiting
+- **Track API requests per user/IP** to prevent abuse.
+- **Sliding window** or **fixed window** rate limiting.
+- **Different limits** for different endpoints.
+
+```js
+// Rate limiting middleware
+const requests = await redisClient.incr(`rate_limit:${userId}:${endpoint}`);
+if (requests === 1) await redisClient.expire(`rate_limit:${userId}:${endpoint}`, 60);
+if (requests > 10) return res.status(429).json({ error: "Rate limit exceeded" });
+```
+
+## 3. Real-Time Features (Pub/Sub)
+- **Live order updates** to kitchen staff and waiters.
+- **Real-time table status** changes.
+- **Instant notifications** when orders are ready.
+
+```js
+// Publisher (when order status changes)
+await redisClient.publish('order_updates', JSON.stringify({ orderId, status }));
+
+// Subscriber (in a separate process)
+redisClient.subscribe('order_updates', (message) => {
+  // Send to connected clients via WebSocket
+});
+```
+
+## 4. Job Queues
+- **Background tasks** like sending emails, generating reports.
+- **Order processing** with retry logic.
+- **Analytics calculations** that don't need to be real-time.
+
+```js
+// Add job to queue
+await redisClient.lpush('email_queue', JSON.stringify({ to, subject, body }));
+
+// Process jobs (in worker process)
+const job = await redisClient.brpop('email_queue', 0);
+```
+
+## 5. Distributed Locks
+- **Prevent race conditions** when multiple servers update the same data.
+- **Ensure only one process** can update a bill at a time.
+
+```js
+// Acquire lock
+const lockKey = `lock:bill:${billId}`;
+const acquired = await redisClient.set(lockKey, 'locked', 'PX', 5000, 'NX');
+if (!acquired) throw new Error('Bill is being updated by another process');
+```
+
+## 6. Analytics & Metrics
+- **Track daily/weekly/monthly sales** with atomic counters.
+- **Monitor peak hours** with time-series data.
+- **User activity tracking**.
+
+```js
+// Increment daily sales
+await redisClient.incrBy(`sales:daily:${date}`, amount);
+
+// Track peak hours
+await redisClient.zincrby('peak_hours', 1, hour);
+```
+
+## 7. Search & Filtering
+- **Fast search** across restaurants, menu items.
+- **Geospatial queries** for nearby restaurants.
+- **Tag-based filtering**.
+
+```js
+// Store restaurant with geospatial data
+await redisClient.geoadd('restaurants', longitude, latitude, restaurantId);
+
+// Find restaurants within 5km
+const nearby = await redisClient.georadius('restaurants', userLng, userLat, 5, 'km');
+```
+
+## 8. Leaderboards & Rankings
+- **Top-selling dishes** across restaurants.
+- **Most popular restaurants**.
+- **Customer loyalty rankings**.
+
+```js
+// Update dish popularity
+await redisClient.zincrby('popular_dishes', 1, dishId);
+
+// Get top 10 dishes
+const topDishes = await redisClient.zrevrange('popular_dishes', 0, 9);
+```
+
+## 9. Temporary Data Storage
+- **Shopping carts** for online ordering.
+- **Draft orders** that expire if not completed.
+- **Temporary user preferences**.
+
+```js
+// Store cart with expiry
+await redisClient.setEx(`cart:${userId}`, 3600, JSON.stringify(cartItems));
+```
+
+## 10. Caching Strategies
+- **Cache warming** (pre-populate cache with popular data).
+- **Cache invalidation patterns** (write-through, write-behind).
+- **Multi-level caching** (Redis + in-memory).
+
+## Recommended Implementation Priority for Restofy
+
+### High Priority:
+1. **Session Management** - Replace JWT with Redis sessions
+2. **Rate Limiting** - Protect your API from abuse
+3. **Real-Time Updates** - Live order tracking for staff
+4. **Job Queues** - Background email notifications, report generation
+
+### Medium Priority:
+5. **Analytics** - Track sales, peak hours, popular items
+6. **Distributed Locks** - Prevent race conditions in high-traffic scenarios
+7. **Search** - Fast restaurant/menu search
+
+### Future Enhancements:
+8. **Leaderboards** - Popular dishes, top restaurants
+9. **Geospatial** - Find nearby restaurants
+10. **Advanced Caching** - Multi-level, cache warming
+
+## Implementation Strategy
+
+1. **Start with caching** (already implemented)
+2. **Add session management** (replace JWT)
+3. **Implement rate limiting** (security)
+4. **Add real-time features** (user experience)
+5. **Scale with job queues** (performance)
+
+Redis can transform Restofy from a simple CRUD API to a real-time, scalable platform! 

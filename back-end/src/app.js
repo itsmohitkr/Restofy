@@ -10,6 +10,7 @@ const errorHandler = require("./error/errorHandler");
 // Routes
 const apiLimiter = require("./rateLimiter/apiLimiter");
 const restaurantRoutes = require("./restaurant/restaurant.router");
+const adminRoutes = require("./admin/admin.router");
 const authRoutes = require("./authentication/auth.router");
 const { restrictToAuthenticatedUser } = require("./middleware/restrictToLoggedInUser");
 
@@ -25,7 +26,9 @@ app.use("/api/auth", authRoutes);
 
 app.use(restrictToAuthenticatedUser);
 
+
 app.use("/api/restaurants", restaurantRoutes);
+// app.use("/api/admin",adminRoutes);
 
 app.use(pathNotFound);
 app.use(errorHandler);

@@ -274,6 +274,40 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
 
 ---
 
+## Cache Invalidation Blocker: Redis and Database Consistency
+
+When using Redis (or any cache) to store data like bills, you must ensure the cache stays consistent with the database. If the underlying data changes (e.g., a bill is marked as paid), the cache can become stale and serve outdated information. This is a classic cache invalidation problem.
+
+### Why Does This Happen?
+- Caches (like Redis) store a copy of the data for a set time (TTL), but do not know when the database changes.
+- If you update the database (e.g., change bill status to "Paid") but do not update or delete the cache, users may see old data until the cache expires.
+
+### How to Handle Cache Invalidation
+- **Delete the cache key** immediately after updating the database (recommended for most web apps):
+  ```js
+  await redisClient.del(`bill:${billId}`);
+  ```
+- **Or, update the cache** with the new value after a DB update:
+  ```js
+  await redisClient.setEx(`bill:${billId}`, 3600, JSON.stringify(updatedBill));
+  ```
+- This ensures the next read will fetch fresh data from the DB and re-cache it.
+
+### Sample Flow
+1. **GET /bill/123** (first time): Not in cache → fetch from DB → cache for 1 hour.
+2. **PUT /bill/123 (mark as paid):** Update DB → delete or update `bill:123` in Redis.
+3. **GET /bill/123** (within 1 hour): Not in cache (was deleted) → fetch fresh from DB → cache again.
+
+### Key Points
+- Always invalidate or update the cache when the underlying data changes.
+- Relying only on TTL can lead to stale data and inconsistencies.
+- This pattern is called **cache-aside** or **lazy caching**.
+
+**Summary:**
+Cache invalidation is critical for data consistency. Always clear or update your cache after any write operation to the database that affects cached data.
+
+---
+
 **Summary:**
 Each architectural decision was made to maximize maintainability, security, and scalability, while keeping the codebase easy to understand and extend. When facing a blocker, I researched best practices, evaluated trade-offs, and chose the approach that best fit the project's needs.
 

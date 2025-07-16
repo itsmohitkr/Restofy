@@ -1,8 +1,9 @@
-const attachOwnerId = (req, res, next) => {
-  if (req.user && req.user.ownerId) {
-    req.ownerId = req.user.ownerId;
+
+const attachUserId = (req, res, next) => {
+  if (req.user && req.user.id) {
+    req.userId = req.user.id;
   }
   next();
 };
 
-module.exports = { attachOwnerId };
+module.exports = {attachUserId };

@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 
 const generateToken = (user) => {
     const payload = {
-        sub: user.ownerId,
-        role: user.role,
+      sub: user.id,
+      role: user.role,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET);
@@ -12,13 +12,14 @@ const generateToken = (user) => {
     return token;
 }
 
+
 const getUserFromToken = (token) => {
     
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         return {
-            ownerId: decoded.sub,
-            role: decoded.role,
+          id: decoded.sub,
+          role: decoded.role,
         };
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
@@ -30,6 +31,7 @@ const getUserFromToken = (token) => {
         }
     }
 };
+
 
 module.exports = { generateToken, getUserFromToken };
     

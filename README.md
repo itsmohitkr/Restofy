@@ -126,11 +126,12 @@ All endpoints are prefixed with `/api` and require authentication (except `/auth
 - `DELETE /api/restaurants/:restaurantId` — Delete restaurant
 
 ### Tables
-- `GET    /api/restaurants/:restaurantId/table` — List tables
+- `GET    /api/restaurants/:restaurantId/table` — List tables (with query support)
 - `POST   /api/restaurants/:restaurantId/table` — Create table
 - `GET    /api/restaurants/:restaurantId/table/:tableId` — Get table
 - `PUT    /api/restaurants/:restaurantId/table/:tableId` — Update table
 - `DELETE /api/restaurants/:restaurantId/table/:tableId` — Delete table
+- `GET    /api/restaurants/:restaurantId/table/search?keyword=...` — Search tables by keyword
 
 ### Menus
 - `POST   /api/restaurants/:restaurantId/menu` — Create menu
@@ -145,10 +146,15 @@ All endpoints are prefixed with `/api` and require authentication (except `/auth
 - `DELETE /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Delete menu item
 
 ### Reservations
-- `GET    /api/restaurants/:restaurantId/reservations` — List reservations
+- `GET    /api/restaurants/:restaurantId/reservations` — List reservations (with query support)
 - `POST   /api/restaurants/:restaurantId/reservations` — Create reservation
 - `GET    /api/restaurants/:restaurantId/reservations/:reservationId` — Get reservation
 - `PUT    /api/restaurants/:restaurantId/reservations/:reservationId` — Update reservation
+- `DELETE /api/restaurants/:restaurantId/reservations/:reservationId` — Delete reservation
+- `GET    /api/restaurants/:restaurantId/reservations/search?keyword=...` — Search reservations by keyword
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/assign-table?tableId=...` — Assign reservation to a table
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/complete?tableId=...` — Mark reservation as completed
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/cancel` — Cancel reservation
 
 ---
 

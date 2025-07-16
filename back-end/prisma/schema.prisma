@@ -7,16 +7,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model RestaurantOwner {
-  ownerId          Int          @id @default(autoincrement())
-  ownerName        String
-  ownerEmail       String       @unique
-  ownerPhoneNumber String       @unique
-  ownerPassword    String
-  role             String       @default("Admin")
-  restaurants      Restaurant[]
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+enum UserRole {
+  Normal_User
+  Owner
+  Customer
+  Staff
+}
+
+model User{
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phoneNumber String   @unique
+  password    String
+  role        UserRole @default(Normal_User)
+  
+  isVerified  Boolean  @default(false) 
+  address     Address?
+  restaurants Restaurant[]
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Address{
+  id          Int      @id @default(autoincrement())
+  street      String
+  city        String
+  state       String
+  country     String
+  pinCode     String
+  landmark    String?
+  userId      Int?      @unique    
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
 }
 
 model Restaurant {
@@ -28,13 +57,12 @@ model Restaurant {
   restaurantDescription String
   restaurantAddress     String
 
-  ownerId         Int?
-  restaurantOwner RestaurantOwner? @relation(fields: [ownerId], references: [ownerId], onDelete: Cascade)
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   tables       Table[]
   reservations Reservation[]
   menu         Menu?
-  staff        RestaurantStaff[]
   orders       Order[]
   orderItems   OrderItem[]
   bills        Bill[]
@@ -120,21 +148,6 @@ model MenuItem {
   updatedAt DateTime @updatedAt
 }
 
-model RestaurantStaff {
-  id               Int     @id @default(autoincrement())
-  staffName        String
-  staffEmail       String  @unique
-  staffPhoneNumber String  @unique
-  staffPassword    String
-  staffRole        String  @default("Staff") // Manager, Waiter, Chef, etc.
-  isActive         Boolean @default(true)
-
-  restaurantId Int
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 enum OrderStatus {
   Open

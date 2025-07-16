@@ -11,6 +11,9 @@ import Tables from './pages/Tables';
 import Menu from './pages/Menu';
 import Reservations from './pages/Reservations';
 import Layout from './components/Layout';
+import Users from './pages/Users';
+import Payments from './pages/Payments';
+import Bills from './pages/Bills';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -72,6 +75,12 @@ function AppRoutes() {
         <Route path="restaurants/:restaurantId/tables" element={<Tables />} />
         <Route path="restaurants/:restaurantId/menu" element={<Menu />} />
         <Route path="restaurants/:restaurantId/reservations" element={<Reservations />} />
+        {/* New Users route */}
+        <Route path="restaurants/:restaurantId/users" element={<Users />} />
+        {/* New Bills route */}
+        <Route path="restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bills" element={<Bills />} />
+        {/* New Payments route */}
+        <Route path="restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill/:billId/payments" element={<Payments />} />
       </Route>
       
       {/* Catch all route */}

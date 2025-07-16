@@ -13,7 +13,7 @@ router.route("/:userId")
 
 
 router.route("/")
-  .post(validate(controller.userSchema), controller.createUser)
+  .post(controller.createUser)
   .get(controller.getAllUsers)
   .all(methodNotAllowed);
 

@@ -10,10 +10,14 @@ const { requireBody } = require("../middleware/requireBody");
 const { validateParam } = require("../middleware/validateParam");
 
 const createRestaurant = async (req, res) => {
+  console.log("user id:", req.userId);
+  
   const finalRestaurantData = {
     ...req.body,
-    ownerId: req.ownerId,
+    userId: req.userId,
   };
+  console.log("Final Restaurant Data:", finalRestaurantData);
+  
   const newRestaurant = await service.createRestaurant(finalRestaurantData);
   sendSuccessResponse(
     res,
@@ -40,7 +44,7 @@ const updateRestaurant = async (req, res) => {
   const updatedRestaurant = await service.updateRestaurant(
     restaurantId,
     restaurantData,
-    req.ownerId
+    req.userId
   );
   sendSuccessResponse(
     res,
@@ -53,7 +57,7 @@ const updateRestaurant = async (req, res) => {
 const deleteRestaurant = async (req, res) => {
   const { restaurantId } = req.params;
 
-  await service.deleteRestaurant(restaurantId, req.ownerId);
+  await service.deleteRestaurant(restaurantId, req.userId);
   sendSuccessResponse(
     res,
     StatusCodes.NO_CONTENT,
@@ -63,7 +67,7 @@ const deleteRestaurant = async (req, res) => {
 };
 
 const getAllRestaurants = async (req, res) => {
-    const restaurants = await service.getAllRestaurants(req.ownerId);
+    const restaurants = await service.getAllRestaurants(req.userId);
     console.log("Retrieved Restaurants:", restaurants);
     
   sendSuccessResponse(
@@ -77,7 +81,7 @@ const getAllRestaurants = async (req, res) => {
 const isRestaurantExist = async (req, res, next) => {
   const { restaurantId } = req.params;
 
-  const restaurant = await service.getRestaurant(restaurantId, req.ownerId);
+  const restaurant = await service.getRestaurant(restaurantId, req.userId);
   if (!restaurant) {
     return next({
       status: StatusCodes.NOT_FOUND,

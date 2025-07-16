@@ -26,6 +26,7 @@ const Layout = () => {
     { name: 'Tables', href: '/restaurants', icon: Users },
     { name: 'Menu', href: '/restaurants', icon: MenuIcon },
     { name: 'Reservations', href: '/restaurants', icon: Calendar },
+    { name: 'Users', href: '/restaurants/1/users', icon: User }, // Example: replace 1 with dynamic restaurantId if available
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 

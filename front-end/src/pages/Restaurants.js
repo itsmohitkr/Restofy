@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import {
   Building2,
   Plus,
@@ -19,53 +20,26 @@ import RestaurantModal from '../components/RestaurantModal';
 const Restaurants = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState(null);
 
+  // Fetch restaurants from backend
   useEffect(() => {
-    // Simulate loading restaurants data
-    setTimeout(() => {
-      setRestaurants([
-        {
-          restaurantId: 1,
-          restaurantName: 'Pizza Palace',
-          restaurantLocation: 'Downtown',
-          restaurantEmail: 'info@pizzapalace.com',
-          restaurantPhoneNumber: '1234567890',
-          restaurantDescription: 'Authentic Italian pizza and pasta',
-          restaurantAddress: '123 Main St, Downtown',
-          tables: 8,
-          reservations: 45,
-          createdAt: '2024-01-01'
-        },
-        {
-          restaurantId: 2,
-          restaurantName: 'Burger House',
-          restaurantLocation: 'Uptown',
-          restaurantEmail: 'contact@burgerhouse.com',
-          restaurantPhoneNumber: '0987654321',
-          restaurantDescription: 'Gourmet burgers and fries',
-          restaurantAddress: '456 Oak Ave, Uptown',
-          tables: 12,
-          reservations: 78,
-          createdAt: '2024-01-15'
-        },
-        {
-          restaurantId: 3,
-          restaurantName: 'Sushi Bar',
-          restaurantLocation: 'Westside',
-          restaurantEmail: 'hello@sushibar.com',
-          restaurantPhoneNumber: '5551234567',
-          restaurantDescription: 'Fresh sushi and Japanese cuisine',
-          restaurantAddress: '789 Pine St, Westside',
-          tables: 6,
-          reservations: 32,
-          createdAt: '2024-02-01'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchRestaurants = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get('/api/restaurants');
+        setRestaurants(response.data.data || []);
+      } catch (err) {
+        setError('Failed to load restaurants.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRestaurants();
   }, []);
 
   const filteredRestaurants = restaurants.filter(restaurant =>
@@ -80,8 +54,12 @@ const Restaurants = () => {
 
   const handleDelete = async (restaurantId) => {
     if (window.confirm('Are you sure you want to delete this restaurant?')) {
-      // API call to delete restaurant
-      setRestaurants(restaurants.filter(r => r.restaurantId !== restaurantId));
+      try {
+        await axios.delete(`/api/restaurants/${restaurantId}`);
+        setRestaurants(restaurants.filter(r => r.restaurantId !== restaurantId));
+      } catch (err) {
+        setError('Failed to delete restaurant.');
+      }
     }
   };
 
@@ -90,26 +68,25 @@ const Restaurants = () => {
     setEditingRestaurant(null);
   };
 
-  const handleSave = (restaurantData) => {
-    if (editingRestaurant) {
-      // Update existing restaurant
-      setRestaurants(restaurants.map(r => 
-        r.restaurantId === editingRestaurant.restaurantId 
-          ? { ...r, ...restaurantData }
-          : r
-      ));
-    } else {
-      // Add new restaurant
-      const newRestaurant = {
-        ...restaurantData,
-        restaurantId: Date.now(),
-        tables: 0,
-        reservations: 0,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setRestaurants([...restaurants, newRestaurant]);
+  const handleSave = async (restaurantData) => {
+    try {
+      if (editingRestaurant) {
+        // Update existing restaurant
+        const response = await axios.put(`/api/restaurants/${editingRestaurant.restaurantId}`, restaurantData);
+        setRestaurants(restaurants.map(r =>
+          r.restaurantId === editingRestaurant.restaurantId
+            ? response.data.data
+            : r
+        ));
+      } else {
+        // Add new restaurant
+        const response = await axios.post('/api/restaurants', restaurantData);
+        setRestaurants([...restaurants, response.data.data]);
+      }
+      handleModalClose();
+    } catch (err) {
+      setError('Failed to save restaurant.');
     }
-    handleModalClose();
   };
 
   if (loading) {
@@ -117,6 +94,12 @@ const Restaurants = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">{error}</div>
     );
   }
 

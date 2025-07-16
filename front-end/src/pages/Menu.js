@@ -1,82 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import { Menu as MenuIcon, Plus, Edit, Trash2, DollarSign, Tag } from 'lucide-react';
 
 const Menu = () => {
   const { restaurantId } = useParams();
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [menuId, setMenuId] = useState(null);
 
+  // Fetch menuId and menu items
   useEffect(() => {
-    // Simulate loading menu data
-    setTimeout(() => {
-      setMenuItems([
-        {
-          id: 1,
-          itemName: 'Margherita Pizza',
-          itemDescription: 'Fresh mozzarella, tomato sauce, and basil',
-          itemPrice: 18.99,
-          itemCategory: 'Pizza',
-          itemImage: null,
-          isAvailable: true,
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 2,
-          itemName: 'Pepperoni Pizza',
-          itemDescription: 'Spicy pepperoni with melted cheese',
-          itemPrice: 20.99,
-          itemCategory: 'Pizza',
-          itemImage: null,
-          isAvailable: true,
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 3,
-          itemName: 'Caesar Salad',
-          itemDescription: 'Fresh romaine lettuce with Caesar dressing',
-          itemPrice: 12.99,
-          itemCategory: 'Salads',
-          itemImage: null,
-          isAvailable: true,
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 4,
-          itemName: 'Spaghetti Carbonara',
-          itemDescription: 'Pasta with eggs, cheese, and pancetta',
-          itemPrice: 16.99,
-          itemCategory: 'Pasta',
-          itemImage: null,
-          isAvailable: false,
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 5,
-          itemName: 'Tiramisu',
-          itemDescription: 'Classic Italian dessert with coffee and mascarpone',
-          itemPrice: 8.99,
-          itemCategory: 'Desserts',
-          itemImage: null,
-          isAvailable: true,
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 6,
-          itemName: 'Garlic Bread',
-          itemDescription: 'Toasted bread with garlic butter and herbs',
-          itemPrice: 5.99,
-          itemCategory: 'Appetizers',
-          itemImage: null,
-          isAvailable: true,
-          restaurantId: parseInt(restaurantId)
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchMenuAndItems = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch menus for the restaurant (assuming one menu per restaurant)
+        const menuRes = await axios.get(`/api/restaurants/${restaurantId}/menu`);
+        const menus = menuRes.data.data || [];
+        const menu = Array.isArray(menus) ? menus[0] : menus;
+        if (!menu || !menu.id) throw new Error('No menu found');
+        setMenuId(menu.id);
+        // Fetch menu items
+        const itemsRes = await axios.get(`/api/restaurants/${restaurantId}/menu/${menu.id}/menuItem`);
+        setMenuItems(itemsRes.data.data || []);
+      } catch (err) {
+        setError('Failed to load menu or menu items.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenuAndItems();
   }, [restaurantId]);
 
   const categories = ['all', ...new Set(menuItems.map(item => item.itemCategory))];
@@ -90,9 +48,36 @@ const Menu = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (itemId) => {
+  const handleDelete = async (itemId) => {
+    if (!menuId) return;
     if (window.confirm('Are you sure you want to delete this menu item?')) {
-      setMenuItems(menuItems.filter(item => item.id !== itemId));
+      try {
+        await axios.delete(`/api/restaurants/${restaurantId}/menu/${menuId}/menuItem/${itemId}`);
+        setMenuItems(menuItems.filter(item => item.id !== itemId));
+      } catch (err) {
+        setError('Failed to delete menu item.');
+      }
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingItem(null);
+  };
+
+  const handleSave = async (itemData) => {
+    if (!menuId) return;
+    try {
+      if (editingItem) {
+        const response = await axios.put(`/api/restaurants/${restaurantId}/menu/${menuId}/menuItem/${editingItem.id}`, itemData);
+        setMenuItems(menuItems.map(item => item.id === editingItem.id ? response.data.data : item));
+      } else {
+        const response = await axios.post(`/api/restaurants/${restaurantId}/menu/${menuId}/menuItem`, itemData);
+        setMenuItems([...menuItems, response.data.data]);
+      }
+      handleModalClose();
+    } catch (err) {
+      setError('Failed to save menu item.');
     }
   };
 
@@ -109,6 +94,12 @@ const Menu = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">{error}</div>
     );
   }
 

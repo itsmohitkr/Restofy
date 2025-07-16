@@ -23,8 +23,8 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
     }
 
     // Check if user exists in DB
-    const user = await prisma.restaurantOwner.findUnique({
-      where: { ownerId: Number(userPayload.ownerId) },
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userPayload.id) },
     });
 
     if (!user) {
@@ -32,7 +32,6 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production" ? true : false,
         sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        
       }); // Optional: clear the cookie
       return next({
         status: StatusCodes.UNAUTHORIZED,

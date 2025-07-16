@@ -64,7 +64,7 @@ const menuItemSchema = Joi.object({
     }),
   itemType: Joi.string().optional().valid("Veg", "Non-Veg").messages({
     "string.base": "Item type must be a string.",
-    "any.only": "Item type must be one of the following: Veg, Non Veg.",
+    "any.only": "Item type must be one of the following: Veg, Non-Veg.",
   }),
   itemStatus: Joi.string()
     .valid("Available", "Unavailable")

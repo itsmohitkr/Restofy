@@ -1,74 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import { Calendar, Plus, Edit, Trash2, Users, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 const Reservations = () => {
   const { restaurantId } = useParams();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    // Simulate loading reservations data
-    setTimeout(() => {
-      setReservations([
-        {
-          id: 1,
-          customerName: 'John Doe',
-          customerEmail: 'john@example.com',
-          customerPhone: '1234567890',
-          reservationDate: '2024-01-15',
-          reservationTime: '19:00',
-          numberOfGuests: 4,
-          tableId: 1,
-          status: 'confirmed',
-          specialRequests: 'Window seat preferred',
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 2,
-          customerName: 'Jane Smith',
-          customerEmail: 'jane@example.com',
-          customerPhone: '0987654321',
-          reservationDate: '2024-01-15',
-          reservationTime: '20:30',
-          numberOfGuests: 2,
-          tableId: 2,
-          status: 'pending',
-          specialRequests: '',
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 3,
-          customerName: 'Mike Johnson',
-          customerEmail: 'mike@example.com',
-          customerPhone: '5551234567',
-          reservationDate: '2024-01-16',
-          reservationTime: '18:00',
-          numberOfGuests: 6,
-          tableId: 3,
-          status: 'confirmed',
-          specialRequests: 'Birthday celebration',
-          restaurantId: parseInt(restaurantId)
-        },
-        {
-          id: 4,
-          customerName: 'Sarah Wilson',
-          customerEmail: 'sarah@example.com',
-          customerPhone: '5559876543',
-          reservationDate: '2024-01-16',
-          reservationTime: '19:30',
-          numberOfGuests: 3,
-          tableId: 4,
-          status: 'cancelled',
-          specialRequests: '',
-          restaurantId: parseInt(restaurantId)
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchReservations = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(`/api/restaurants/${restaurantId}/reservations`);
+        setReservations(response.data.data || []);
+      } catch (err) {
+        setError('Failed to load reservations.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReservations();
   }, [restaurantId]);
 
   const getStatusColor = (status) => {
@@ -106,16 +63,45 @@ const Reservations = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (reservationId) => {
+  const handleDelete = async (reservationId) => {
     if (window.confirm('Are you sure you want to delete this reservation?')) {
-      setReservations(reservations.filter(r => r.id !== reservationId));
+      try {
+        await axios.delete(`/api/restaurants/${restaurantId}/reservations/${reservationId}`);
+        setReservations(reservations.filter(r => r.id !== reservationId));
+      } catch (err) {
+        setError('Failed to delete reservation.');
+      }
     }
   };
 
-  const updateStatus = (reservationId, newStatus) => {
-    setReservations(reservations.map(r => 
-      r.id === reservationId ? { ...r, status: newStatus } : r
-    ));
+  const updateStatus = async (reservationId, newStatus) => {
+    try {
+      // Assuming PATCH endpoint for status update
+      const response = await axios.patch(`/api/restaurants/${restaurantId}/reservations/${reservationId}`, { status: newStatus });
+      setReservations(reservations.map(r => r.id === reservationId ? response.data.data : r));
+    } catch (err) {
+      setError('Failed to update reservation status.');
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingReservation(null);
+  };
+
+  const handleSave = async (reservationData) => {
+    try {
+      if (editingReservation) {
+        const response = await axios.put(`/api/restaurants/${restaurantId}/reservations/${editingReservation.id}`, reservationData);
+        setReservations(reservations.map(r => r.id === editingReservation.id ? response.data.data : r));
+      } else {
+        const response = await axios.post(`/api/restaurants/${restaurantId}/reservations`, reservationData);
+        setReservations([...reservations, response.data.data]);
+      }
+      handleModalClose();
+    } catch (err) {
+      setError('Failed to save reservation.');
+    }
   };
 
   if (loading) {
@@ -123,6 +109,12 @@ const Reservations = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">{error}</div>
     );
   }
 

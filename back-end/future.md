@@ -339,3 +339,41 @@ await redisClient.setEx(`cart:${userId}`, 3600, JSON.stringify(cartItems));
 5. **Scale with job queues** (performance)
 
 Redis can transform Restofy from a simple CRUD API to a real-time, scalable platform! 
+
+## Event-Driven Architecture (Planned)
+
+To further scale and decouple the Restofy platform, we plan to adopt an **event-driven architecture** using a message broker such as **Kafka** or **RabbitMQ**. This will enable microservices (e.g., notifications, analytics, inventory, audit logs) to communicate via events rather than direct REST calls.
+
+### Rationale
+- **Loose coupling:** Services interact via events, not direct API calls.
+- **Scalability:** Easily add new services (e.g., analytics, notifications) that react to events.
+- **Resilience:** Services can operate independently and recover from failures more easily.
+
+### Example Use Cases
+- When an order is placed, the backend publishes an `OrderCreated` event. The notification service listens for this event and sends a confirmation email/SMS.
+- Analytics service listens for `ReservationCreated` and `OrderCompleted` events to update dashboards in real time.
+- Inventory service updates stock levels in response to order events.
+
+### Sample Architecture Diagram
+
+```mermaid
+flowchart LR
+  FE[Frontend (React/Tailwind)]
+  BE[Backend (Node.js/Express)]
+  SB[Spring Boot Service]
+  MQ[Message Broker (Kafka/RabbitMQ)]
+  DB1[(DB)]
+  DB2[(DB)]
+  FE -- REST --> BE
+  BE -- REST --> DB1
+  BE -- Publishes Events --> MQ
+  SB -- Subscribes to Events --> MQ
+  SB -- REST/DB --> DB2
+```
+
+### Implementation Notes
+- The message broker will be run via Docker Compose for local development, and as a managed/cloud service or self-hosted in production.
+- Each microservice will connect to the broker to publish/subscribe to relevant events.
+- Authentication and security will be enforced for all broker connections and service APIs.
+
+--- 

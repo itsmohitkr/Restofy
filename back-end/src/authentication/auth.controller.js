@@ -4,67 +4,91 @@ const service = require("./auth.service");
 const { successResponse } = require("../utils/responseBody");
 const bcrypt = require("bcrypt");
 const asyncErrorBoundary = require("../error/asyncErrorBoundary");
-const { generateToken } = require("../middleware/tokenService");
+const { generateToken, generateTokenv2 } = require("../middleware/tokenService");
+const { sendErrorResponse, sendSuccessResponse } = require("../utils/responseHelpers");
+
+
 
 const signup = async (req, res, next) => {
-  const { ownerName, ownerEmail, ownerPhoneNumber, ownerPassword } =
-    req.body;
-  // Check if the user already exists
+    const { firstName, lastName, email, phoneNumber, password, address } = req.body;
 
-    const isOwnerExist = await service.read(ownerEmail);
-  if (isOwnerExist) {
-    return next({
-      status: StatusCodes.BAD_REQUEST,
-      message: "Owner already exists",
-      error: "Validation Error",
-    });
-  }
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(ownerPassword, 10);
-    // Create a new owner
-    const newOwner = {
-        ...req.body,
-        ownerPassword: hashedPassword,
+    const { street, city, state, country, pinCode, landmark } = address || {};
+    
+    
+    const isUserExist = await service.read(email);
+    if (isUserExist) {
+        return sendErrorResponse(
+            res,
+            StatusCodes.BAD_REQUEST,
+            "User already exists",
+            "Validation Error"
+        );
     }
-    const createdOwner = await service.create(newOwner);
-
-    const response = successResponse(StatusCodes.CREATED, "Owner created successfully", createdOwner);
-    res.status(StatusCodes.CREATED).json(response);   
-
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create a new user
+    const newUser = {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        password: hashedPassword,
+        role: "Owner",
+       
+    };
+    if (address) {
+        newUser.address = {
+            create: {
+                street,
+                city,
+                state,
+                country,
+                pinCode,
+                landmark
+            }
+        }
+    }
+    const createdUser = await service.createUser(newUser);
+    sendSuccessResponse(
+        res,
+        StatusCodes.CREATED,
+        "User created successfully",
+        createdUser
+    );
 };
 
 const login = async (req, res, next) => {
-    const { ownerEmail, ownerPassword } = req.body;
-    // Check if the owner exists    
-    const owner = await service.read(ownerEmail);
-    if (!owner) {
-        return next({
-            status: StatusCodes.UNAUTHORIZED,
-            message: "Invalid email, Please resgister.",
-            error: "Authentication Error",
-        });
-    }
-    if (owner && (!await bcrypt.compare(ownerPassword, owner.ownerPassword))) {
-        return next({
-            status: StatusCodes.UNAUTHORIZED,
-            message: "Invalid password",
-            error: "Authentication Error",
-        });
-    }
-    // Generate a token 
-    const token = generateToken(owner);
-    console.log(res);
-    
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production"? true : false,
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    });
+  const { email, password } = req.body;
+  // Check if the user exists
+  const user = await service.read(email);
+  if (!user) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.UNAUTHORIZED,
+      "Invalid email, Please register.",
+      "Authentication Error"
+    );
+  }
+  if (user && !(await bcrypt.compare(password, user.password))) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.UNAUTHORIZED,
+      "Invalid password",
+      "Authentication Error"
+    );
+  }
+  // Generate a token
+  const token = generateToken(user);
+  console.log("Generated Token:", token);
 
-    const response = successResponse(StatusCodes.OK, "Login successful", owner);
-    res.status(StatusCodes.OK).json(response);
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  });
 
-}
+  sendSuccessResponse(res, StatusCodes.OK, "Login successful", user);
+};
 const verifyToken = async (req, res, next) => {
     // Implementation for verifying the token
     const token = req.cookies?.token;

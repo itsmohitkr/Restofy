@@ -1,0 +1,27 @@
+model
+  schema 1.1
+
+type user
+
+type role
+  relations
+    define owner: [user]
+    define staff: [user]
+    define customer: [user]
+
+type restaurant
+  relations
+    define owner: [user]
+    define staff: [user]
+    define viewer: owner or staff
+    define can_create_restaurant: owner
+    define can_edit_restaurant: owner
+    define can_delete_restaurant: owner
+    define can_view_restaurant: viewer
+
+type reservation
+  relations
+    define creator: [user]
+    define restaurant: [restaurant#viewer]
+    define can_create_reservation: restaurant or creator
+    define can_view_reservation: creator

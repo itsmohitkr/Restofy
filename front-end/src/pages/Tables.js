@@ -1,36 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import { Users, Plus, Edit, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const Tables = () => {
   const { restaurantId } = useParams();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
 
   useEffect(() => {
-    // Simulate loading tables data
-    setTimeout(() => {
-      setTables([
-        { id: 1, tableNumber: 'T1', capacity: 4, status: 'available', location: 'Window', restaurantId: parseInt(restaurantId) },
-        { id: 2, tableNumber: 'T2', capacity: 2, status: 'occupied', location: 'Bar', restaurantId: parseInt(restaurantId) },
-        { id: 3, tableNumber: 'T3', capacity: 6, status: 'reserved', location: 'Center', restaurantId: parseInt(restaurantId) },
-        { id: 4, tableNumber: 'T4', capacity: 4, status: 'available', location: 'Garden', restaurantId: parseInt(restaurantId) },
-        { id: 5, tableNumber: 'T5', capacity: 8, status: 'available', location: 'Private', restaurantId: parseInt(restaurantId) },
-        { id: 6, tableNumber: 'T6', capacity: 2, status: 'occupied', location: 'Window', restaurantId: parseInt(restaurantId) },
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchTables = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(`/api/restaurants/${restaurantId}/table`);
+        setTables(response.data.data || []);
+      } catch (err) {
+        setError('Failed to load tables.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTables();
   }, [restaurantId]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'available':
+      case 'Available':
         return 'bg-success-100 text-success-800';
-      case 'occupied':
+      case 'Occupied':
         return 'bg-error-100 text-error-800';
-      case 'reserved':
+      case 'Reserved':
         return 'bg-warning-100 text-warning-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -39,11 +42,11 @@ const Tables = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'available':
+      case 'Available':
         return <CheckCircle className="h-4 w-4" />;
-      case 'occupied':
+      case 'Occupied':
         return <XCircle className="h-4 w-4" />;
-      case 'reserved':
+      case 'Reserved':
         return <Clock className="h-4 w-4" />;
       default:
         return null;
@@ -55,9 +58,34 @@ const Tables = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (tableId) => {
+  const handleDelete = async (tableId) => {
     if (window.confirm('Are you sure you want to delete this table?')) {
-      setTables(tables.filter(t => t.id !== tableId));
+      try {
+        await axios.delete(`/api/restaurants/${restaurantId}/table/${tableId}`);
+        setTables(tables.filter(t => t.id !== tableId));
+      } catch (err) {
+        setError('Failed to delete table.');
+      }
+    }
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setEditingTable(null);
+  };
+
+  const handleSave = async (tableData) => {
+    try {
+      if (editingTable) {
+        const response = await axios.put(`/api/restaurants/${restaurantId}/table/${editingTable.id}`, tableData);
+        setTables(tables.map(t => t.id === editingTable.id ? response.data.data : t));
+      } else {
+        const response = await axios.post(`/api/restaurants/${restaurantId}/table`, tableData);
+        setTables([...tables, response.data.data]);
+      }
+      handleModalClose();
+    } catch (err) {
+      setError('Failed to save table.');
     }
   };
 
@@ -66,6 +94,12 @@ const Tables = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">{error}</div>
     );
   }
 
@@ -96,7 +130,7 @@ const Tables = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Available</p>
               <p className="text-2xl font-bold text-gray-900">
-                {tables.filter(t => t.status === 'available').length}
+                {tables.filter(t => t.status === 'Available').length}
               </p>
             </div>
           </div>
@@ -109,7 +143,7 @@ const Tables = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Occupied</p>
               <p className="text-2xl font-bold text-gray-900">
-                {tables.filter(t => t.status === 'occupied').length}
+                {tables.filter(t => t.status === 'Occupied').length}
               </p>
             </div>
           </div>
@@ -122,7 +156,7 @@ const Tables = () => {
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-600">Reserved</p>
               <p className="text-2xl font-bold text-gray-900">
-                {tables.filter(t => t.status === 'reserved').length}
+                {tables.filter(t => t.status === 'Reserved').length}
               </p>
             </div>
           </div>

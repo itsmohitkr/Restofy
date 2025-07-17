@@ -18,28 +18,42 @@ Restofy is a robust, production-ready restaurant management backend built with N
 
 ---
 
-## Folder Structure
+## Backend Folder Structure
+
 ```
 back-end/
+  ├── assests/                  # Static assets (e.g., ER diagrams)
+  ├── prisma/                   # Prisma schema & migrations
+  ├── logs/                     # Winston log files
+  ├── tests/                    # Jest/Supertest tests
   ├── src/
-  │   ├── authentication/   # Auth logic (signup, login, JWT)
-  │   ├── restaurant/       # Restaurant CRUD
-  │   ├── tables/           # Table management
-  │   ├── menu/             # Menu management
-  │   ├── menuItem/         # Menu item management
-  │   ├── reservation/      # Reservation management
-  │   ├── middleware/       # Auth, validation, token, etc.
-  │   ├── utils/            # Logger, response helpers
-  │   ├── error/            # Error handling middleware
-  │   ├── rateLimiter/      # API rate limiting
-  │   ├── validation/       # Joi schemas
-  │   └── app.js, server.js # App entry points
-  ├── prisma/               # Prisma schema & migrations
-  ├── tests/                # Jest/Supertest tests
-  ├── logs/                 # Winston log files
-  ├── env.example           # Environment variable template
-  ├── BLOCKERS.md           # Architectural decisions
-  └── README.md             # This file
+  │   ├── admin/                # Admin routes, controllers, services
+  │   ├── authentication/       # Auth logic (signup, login, JWT)
+  │   ├── bill/                 # Bill management
+  │   ├── constants/            # App-wide constants (e.g., permissions)
+  │   ├── error/                # Error handling middleware
+  │   ├── menu/                 # Menu management
+  │   ├── menuItem/             # Menu item management
+  │   ├── middleware/           # Auth, validation, token, etc.
+  │   ├── order/                # Order management
+  │   ├── payment/              # Payment management
+  │   ├── rateLimiter/          # API rate limiting
+  │   ├── reservation/          # Reservation management
+  │   ├── restaurant/           # Restaurant CRUD
+  │   ├── tables/               # Table management
+  │   ├── user/                 # User management
+  │   ├── utils/                # Logger, response helpers, redis, etc.
+  │   ├── validation/           # Joi schemas (with subfolders for param/body/query)
+  │   ├── app.js                # Express app entry point
+  │   └── server.js             # Server startup
+  ├── BLOCKERS.md               # Architectural decisions
+  ├── LEARNING_GUIDE.md         # Learning resources and notes
+  ├── env.example               # Environment variable template
+  ├── future.md                 # Future plans/features
+  ├── jest.config.js            # Jest config
+  ├── package.json              # NPM dependencies and scripts
+  ├── package-lock.json         # NPM lockfile
+  └── README.md                 # Project documentation
 ```
 
 ---
@@ -111,50 +125,71 @@ See [`prisma/schema.prisma`](./prisma/schema.prisma) for full details.
 ---
 
 ## API Documentation
-All endpoints are prefixed with `/api` and require authentication (except `/auth`).
+All endpoints are prefixed with `/api`.
 
 ### Auth
-- `POST   /api/auth/signup` — Register owner
+- `POST   /api/auth/signup` — Register a new user (owner)
 - `POST   /api/auth/login` — Login, returns JWT cookie
 - `GET    /api/auth/verifyToken` — Verify JWT
 
 ### Restaurants
-- `GET    /api/restaurants` — List all restaurants for owner
-- `POST   /api/restaurants` — Create restaurant
-- `GET    /api/restaurants/:restaurantId` — Get restaurant
-- `PUT    /api/restaurants/:restaurantId` — Update restaurant
-- `DELETE /api/restaurants/:restaurantId` — Delete restaurant
+- `GET    /api/restaurants` — List all restaurants for the authenticated user
+- `POST   /api/restaurants` — Create a new restaurant
+- `GET    /api/restaurants/:restaurantId` — Get a specific restaurant
+- `PUT    /api/restaurants/:restaurantId` — Update a restaurant
+- `DELETE /api/restaurants/:restaurantId` — Delete a restaurant
 
 ### Tables
-- `GET    /api/restaurants/:restaurantId/table` — List tables (with query support)
-- `POST   /api/restaurants/:restaurantId/table` — Create table
-- `GET    /api/restaurants/:restaurantId/table/:tableId` — Get table
-- `PUT    /api/restaurants/:restaurantId/table/:tableId` — Update table
-- `DELETE /api/restaurants/:restaurantId/table/:tableId` — Delete table
+- `GET    /api/restaurants/:restaurantId/table` — List all tables for a restaurant (supports query)
+- `POST   /api/restaurants/:restaurantId/table` — Create a table
+- `GET    /api/restaurants/:restaurantId/table/:tableId` — Get a specific table
+- `PUT    /api/restaurants/:restaurantId/table/:tableId` — Update a table
+- `DELETE /api/restaurants/:restaurantId/table/:tableId` — Delete a table
 - `GET    /api/restaurants/:restaurantId/table/search?keyword=...` — Search tables by keyword
 
 ### Menus
-- `POST   /api/restaurants/:restaurantId/menu` — Create menu
-- `GET    /api/restaurants/:restaurantId/menu/:menuId` — Get menu
-- `DELETE /api/restaurants/:restaurantId/menu/:menuId` — Delete menu
+- `POST   /api/restaurants/:restaurantId/menu` — Create a menu
+- `GET    /api/restaurants/:restaurantId/menu/:menuId` — Get a menu
+- `DELETE /api/restaurants/:restaurantId/menu/:menuId` — Delete a menu
 
 ### Menu Items
-- `GET    /api/restaurants/:restaurantId/menu/:menuId/menuItem` — List menu items
-- `POST   /api/restaurants/:restaurantId/menu/:menuId/menuItem` — Create menu item
-- `GET    /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Get menu item
-- `PUT    /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Update menu item
-- `DELETE /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Delete menu item
+- `GET    /api/restaurants/:restaurantId/menu/:menuId/menuItem` — List menu items (supports query)
+- `POST   /api/restaurants/:restaurantId/menu/:menuId/menuItem` — Create a menu item
+- `GET    /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Get a menu item
+- `PUT    /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Update a menu item
+- `PATCH  /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Update a single field of a menu item
+- `DELETE /api/restaurants/:restaurantId/menu/:menuId/menuItem/:menuItemId` — Delete a menu item
 
 ### Reservations
-- `GET    /api/restaurants/:restaurantId/reservations` — List reservations (with query support)
-- `POST   /api/restaurants/:restaurantId/reservations` — Create reservation
-- `GET    /api/restaurants/:restaurantId/reservations/:reservationId` — Get reservation
-- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId` — Update reservation
-- `DELETE /api/restaurants/:restaurantId/reservations/:reservationId` — Delete reservation
+- `GET    /api/restaurants/:restaurantId/reservations` — List reservations (supports query)
+- `POST   /api/restaurants/:restaurantId/reservations` — Create a reservation
+- `GET    /api/restaurants/:restaurantId/reservations/:reservationId` — Get a reservation
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId` — Update a reservation
+- `DELETE /api/restaurants/:restaurantId/reservations/:reservationId` — Delete a reservation
 - `GET    /api/restaurants/:restaurantId/reservations/search?keyword=...` — Search reservations by keyword
 - `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/assign-table?tableId=...` — Assign reservation to a table
-- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/complete?tableId=...` — Mark reservation as completed
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/completed?tableId=...` — Mark reservation as completed
 - `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/cancel` — Cancel reservation
+
+### Orders
+- `POST   /api/restaurants/:restaurantId/reservations/:reservationId/order` — Create an order for a reservation
+- `GET    /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId` — Get an order
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId` — Update an order
+- `PUT    /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/complete` — Complete an order
+
+### Bills
+- `POST   /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill` — Create a bill for an order
+- `GET    /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill/:billId` — Get a bill
+
+### Payments
+- `POST   /api/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill/:billId/payment` — Make a payment for a bill
+
+### Users
+- `POST   /api/users` — Create a user
+- `GET    /api/users` — List all users
+- `GET    /api/users/:userId` — Get a user
+- `PUT    /api/users/:userId` — Update a user
+- `DELETE /api/users/:userId` — Delete a user
 
 ---
 

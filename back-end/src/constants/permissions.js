@@ -74,7 +74,7 @@ const PERMISSIONS = {
 
 // Default permissions for each role
 const ROLE_PERMISSIONS = {
-  Admin: Object.values(PERMISSIONS),
+  Owner: Object.values(PERMISSIONS),
 
   Staff: [
     PERMISSIONS.CAN_VIEW_MENU,

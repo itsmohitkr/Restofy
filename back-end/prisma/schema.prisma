@@ -28,6 +28,7 @@ model User{
   restaurants Restaurant[]
   isActive    Boolean  @default(true)
 
+  retaurantEmployees RestaurantEmployee[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -42,11 +43,41 @@ model Address{
   landmark    String?
   userId      Int?      @unique    
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  employeeId Int? @unique
+  employee   RestaurantEmployee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
 }
+
+enum EmployeeRole{
+  Manager
+  Staff
+}
+
+model RestaurantEmployee {
+    id          Int      @id @default(autoincrement())
+    firstName   String
+    lastName    String
+    email       String   @unique
+    phoneNumber String   @unique
+    role        EmployeeRole @default(Staff)
+    password    String
+    isActive    Boolean  @default(true)
+    isVerified  Boolean  @default(false)
+    address     Address?
+
+    addedByUserId Int
+    addedByUser   User @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
+
+    restaurantId Int
+    restaurant   Restaurant @relation(fields: [restaurantId], references: [restaurantId], onDelete: Cascade)
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+  }
+
 
 model Restaurant {
   restaurantId          Int    @id @default(autoincrement())
@@ -59,6 +90,7 @@ model Restaurant {
 
   userId Int?
   user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employees RestaurantEmployee[]
 
   tables       Table[]
   reservations Reservation[]

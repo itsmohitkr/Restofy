@@ -79,7 +79,6 @@ const login = async (req, res, next) => {
   }
   // Generate a token
   const token = generateToken(user);
-  console.log("Generated Token:", token);
 
   res.cookie("token", token, {
     httpOnly: true,

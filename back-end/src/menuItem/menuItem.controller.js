@@ -12,7 +12,6 @@ const createMenuItem = async (req, res) => {
     ...req.body,
     menuId: Number(req.params.menuId),
   };
-  console.log('menuItemData', menuItemData);
   
   
   const item = await service.createMenuItem(menuItemData);

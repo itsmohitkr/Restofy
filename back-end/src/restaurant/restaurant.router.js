@@ -9,14 +9,18 @@ const tableRoutes = require("../tables/table.router");
 const reservationRoutes = require("../reservation/reservation.router");
 const menuRoutes = require("../menu/menu.router");
 const menuItemRoutes = require("../menuItem/menuItem.router");
+const userRoutes = require("../user/user.router");
 
 const validate = require("../middleware/validate");
 const methodNotAllowed = require("../error/methodNotAllowed");
 const { attachUserId } = require("../middleware/attachOwnerId");
+const requirePermission = require("../middleware/requirePermission");
+const { PERMISSIONS } = require("../constants/permissions");
 
-router.use(attachUserId); 
+router.use(attachUserId);
 
 router.use("/:restaurantId/table", tableRoutes);
+router.use("/:restaurantId/user", userRoutes);
 
 router.use(
   "/:restaurantId/reservations",
@@ -34,14 +38,25 @@ router.use("/:restaurantId/menu", controller.isRestaurantExist, menuRoutes);
 router
   .route("/:restaurantId")
   .get(controller.getRestaurant)
-  .put(validate(restaurantSchema), controller.updateRestaurant)
-  .delete(controller.deleteRestaurant)
+  .put(
+    requirePermission(PERMISSIONS.CAN_UPDATE_RESTAURANT),
+    validate(restaurantSchema),
+    controller.updateRestaurant
+  )
+  .delete(
+    requirePermission(PERMISSIONS.CAN_DELETE_RESTAURANT),
+    controller.deleteRestaurant
+  )
   .all(methodNotAllowed);
 
 router
   .route("/")
   .get(controller.getAllRestaurants)
-  .post(validate(restaurantSchema), controller.createRestaurant)
+  .post(
+    requirePermission(PERMISSIONS.CAN_CREATE_RESTAURANT),
+    validate(restaurantSchema),
+    controller.createRestaurant
+  )
   .all(methodNotAllowed);
 
 module.exports = router;

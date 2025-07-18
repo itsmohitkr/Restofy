@@ -1,14 +1,14 @@
 const prisma = require("../../prisma/client");
 
-const create = async (ownerData) => {
-  return await prisma.restaurantOwner.create({
-    data: ownerData,
+const create = async (userData) => {
+  return await prisma.restaurantEmployee.create({
+      data: userData,
   });
 };
-const read = async (ownerEmail) => {
-  return await prisma.restaurantOwner.findUnique({
+const read = async (email) => {
+  return await prisma.restaurantEmployee.findUnique({
     where: {
-      ownerEmail: ownerEmail,
+      email: email,
     },
   });
 };

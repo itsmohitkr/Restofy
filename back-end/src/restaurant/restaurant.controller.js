@@ -10,13 +10,11 @@ const { requireBody } = require("../middleware/requireBody");
 const { validateParam } = require("../middleware/validateParam");
 
 const createRestaurant = async (req, res) => {
-  console.log("user id:", req.userId);
   
   const finalRestaurantData = {
     ...req.body,
     userId: req.userId,
   };
-  console.log("Final Restaurant Data:", finalRestaurantData);
   
   const newRestaurant = await service.createRestaurant(finalRestaurantData);
   sendSuccessResponse(
@@ -68,7 +66,6 @@ const deleteRestaurant = async (req, res) => {
 
 const getAllRestaurants = async (req, res) => {
     const restaurants = await service.getAllRestaurants(req.userId);
-    console.log("Retrieved Restaurants:", restaurants);
     
   sendSuccessResponse(
     res,

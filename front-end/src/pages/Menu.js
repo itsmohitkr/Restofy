@@ -31,7 +31,7 @@ const Menu = () => {
       } catch (err) {
         setError('Failed to load menu or menu items.');
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
     fetchMenuAndItems();
@@ -53,7 +53,7 @@ const Menu = () => {
     if (window.confirm('Are you sure you want to delete this menu item?')) {
       try {
         await axios.delete(`/api/restaurants/${restaurantId}/menu/${menuId}/menuItem/${itemId}`);
-        setMenuItems(menuItems.filter(item => item.id !== itemId));
+      setMenuItems(menuItems.filter(item => item.id !== itemId));
       } catch (err) {
         setError('Failed to delete menu item.');
       }

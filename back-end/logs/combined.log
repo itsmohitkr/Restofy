@@ -73,3 +73,4 @@ warn: Rate limit exceeded for IP: ::1 on path: /api/auth/login {"timestamp":"202
 warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-29T17:17:54.218Z"}
 warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/4 {"timestamp":"2025-06-29T17:18:08.955Z"}
 warn: Rate limit exceeded for IP: ::1 on path: /api/restaurants/6 {"timestamp":"2025-06-29T17:27:28.503Z"}
+info: Checking if restaurant exists with ID: 9 {"timestamp":"2025-07-23T11:53:18.117Z"}

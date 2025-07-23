@@ -376,4 +376,923 @@ flowchart LR
 - Each microservice will connect to the broker to publish/subscribe to relevant events.
 - Authentication and security will be enforced for all broker connections and service APIs.
 
---- 
+---
+
+# Production-Level App.js Refactoring
+
+### Current Issues in app.js
+1. **Security Vulnerabilities**
+   - Missing Helmet for security headers
+   - Basic CORS configuration
+   - No request size limits
+   - Missing security middleware
+
+2. **Poor Middleware Organization**
+   - Global authentication after specific routes
+   - No environment-specific configuration
+   - Missing health checks
+   - No proper logging setup
+
+3. **Scalability Issues**
+   - Hard-coded route paths
+   - No API versioning
+   - Mixed concerns in single file
+
+### Production-Level Improvements Needed
+
+#### 1. Security Hardening
+```javascript
+// Add Helmet for security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
+
+// Proper CORS configuration
+app.use(cors({
+  origin: config.cors.origins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  maxAge: 86400, // 24 hours
+}));
+
+// Request size limits
+app.use(express.json({ 
+  limit: '10mb',
+  strict: true 
+}));
+```
+
+#### 2. Enhanced Rate Limiting
+```javascript
+// Different rate limits for different endpoints
+app.use('/api/auth/login', rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts
+  message: 'Too many login attempts'
+}));
+
+app.use('/api/auth/signup', rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 attempts
+  message: 'Too many signup attempts'
+}));
+```
+
+#### 3. Health Checks & Monitoring
+```javascript
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV,
+    version: process.env.npm_package_version,
+    memory: process.memoryUsage(),
+  });
+});
+
+// Readiness check for Kubernetes/Docker
+app.get('/ready', async (req, res) => {
+  try {
+    // Add database connectivity check
+    res.status(200).json({ status: 'ready' });
+  } catch (error) {
+    res.status(503).json({ status: 'not ready' });
+  }
+});
+```
+
+#### 4. Proper Logging Setup
+```javascript
+// Production logging
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined', { 
+    stream: { write: (message) => logger.info(message.trim()) }
+  }));
+} else {
+  app.use(morgan('dev'));
+}
+```
+
+#### 5. Route Organization
+```javascript
+// Modular route structure
+app.use('/api', routes); // Central route handler
+
+// Instead of individual route imports in app.js
+// Create routes/index.js for better organization
+```
+
+#### 6. Error Handling & Graceful Shutdown
+```javascript
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
+// Unhandled promise rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Promise Rejection:', reason);
+  process.exit(1);
+});
+```
+
+#### 7. Configuration Management
+```javascript
+// Environment-specific configuration
+const config = {
+  app: {
+    env: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3000,
+    maxRequestSize: process.env.MAX_REQUEST_SIZE || '10mb',
+  },
+  cors: {
+    origins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+  },
+  auth: {
+    jwtSecret: process.env.JWT_SECRET,
+    jwtExpiration: process.env.JWT_EXPIRATION || '7d',
+  },
+};
+```
+
+### Migration Priority
+1. **Phase 1**: Add security middleware (Helmet, proper CORS)
+2. **Phase 2**: Implement health checks and monitoring
+3. **Phase 3**: Reorganize routes into modular structure
+4. **Phase 4**: Add proper error handling and graceful shutdown
+5. **Phase 5**: Implement environment-specific configurations
+
+### Benefits of Refactoring
+- **Security**: Production-ready security headers and protections
+- **Monitoring**: Health checks for load balancers and orchestrators
+- **Scalability**: Modular route organization for microservices migration
+- **Reliability**: Proper error handling and graceful shutdown
+- **Maintainability**: Clean separation of concerns and configuration management
+
+### Tools to Add
+- `helmet` - Security headers
+- `compression` - Response compression
+- `express-rate-limit` - Advanced rate limiting
+- `express-slow-down` - Request throttling
+- `winston` - Production logging
+- `dotenv` - Environment configuration
+
+### Complete Production-Level Implementation Code
+
+#### Enhanced Security Middleware
+```javascript
+// filepath: src/shared/middleware/security.js
+const rateLimit = require('express-rate-limit');
+const slowDown = require('express-slow-down');
+const { body, validationResult } = require('express-validator');
+
+// Request size limiter
+const requestSizeLimiter = (req, res, next) => {
+  const contentLength = parseInt(req.get('Content-Length'));
+  const maxSize = 10 * 1024 * 1024; // 10MB
+
+  if (contentLength > maxSize) {
+    return res.status(413).json({
+      error: 'Request entity too large'
+    });
+  }
+  next();
+};
+
+// IP whitelist middleware (if needed)
+const ipWhitelist = (allowedIPs) => (req, res, next) => {
+  const clientIP = req.ip || req.connection.remoteAddress;
+  
+  if (allowedIPs.includes(clientIP)) {
+    next();
+  } else {
+    res.status(403).json({ error: 'IP not allowed' });
+  }
+};
+
+// Request sanitization
+const sanitizeRequest = [
+  body('*').trim().escape(),
+];
+
+// Advanced rate limiting with different strategies
+const createRateLimit = (windowMs, max, message, skipSuccessfulRequests = false) => rateLimit({
+  windowMs,
+  max,
+  message: { error: message },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests,
+  handler: (req, res) => {
+    logger.warn(`Rate limit exceeded for IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
+    res.status(429).json({ error: message });
+  }
+});
+
+module.exports = {
+  requestSizeLimiter,
+  ipWhitelist,
+  sanitizeRequest,
+  createRateLimit,
+};
+```
+
+#### Production-Ready Error Handling
+```javascript
+// filepath: src/shared/errors/index.js
+class BaseError extends Error {
+  constructor(message, statusCode, isOperational = true, stack = '') {
+    super(message);
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+}
+
+class ValidationError extends BaseError {
+  constructor(message = 'Validation failed', details = []) {
+    super(message, 400);
+    this.details = details;
+    this.type = 'ValidationError';
+  }
+}
+
+class NotFoundError extends BaseError {
+  constructor(resource = 'Resource') {
+    super(`${resource} not found`, 404);
+    this.type = 'NotFoundError';
+  }
+}
+
+class UnauthorizedError extends BaseError {
+  constructor(message = 'Authentication required') {
+    super(message, 401);
+    this.type = 'UnauthorizedError';
+  }
+}
+
+class ForbiddenError extends BaseError {
+  constructor(message = 'Insufficient permissions') {
+    super(message, 403);
+    this.type = 'ForbiddenError';
+  }
+}
+
+class ConflictError extends BaseError {
+  constructor(message = 'Resource conflict') {
+    super(message, 409);
+    this.type = 'ConflictError';
+  }
+}
+
+class DatabaseError extends BaseError {
+  constructor(message = 'Database operation failed') {
+    super(message, 500);
+    this.type = 'DatabaseError';
+  }
+}
+
+// Error handler middleware
+const errorHandler = (error, req, res, next) => {
+  const logger = require('../utils/logger');
+  
+  // Log error details
+  logger.error('Error occurred:', {
+    message: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    userId: res.locals.user?.userId,
+  });
+
+  // Handle known errors
+  if (error instanceof BaseError) {
+    return res.status(error.statusCode).json({
+      success: false,
+      error: {
+        type: error.type || error.constructor.name,
+        message: error.message,
+        details: error.details || undefined,
+      },
+      timestamp: new Date().toISOString(),
+      path: req.path,
+    });
+  }
+
+  // Handle Prisma errors
+  if (error.code && error.code.startsWith('P')) {
+    return handlePrismaError(error, res);
+  }
+
+  // Handle validation errors
+  if (error.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      error: {
+        type: 'ValidationError',
+        message: 'Validation failed',
+        details: error.details,
+      },
+    });
+  }
+
+  // Handle JWT errors
+  if (error.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      error: {
+        type: 'UnauthorizedError',
+        message: 'Invalid token',
+      },
+    });
+  }
+
+  // Default error response
+  res.status(500).json({
+    success: false,
+    error: {
+      type: 'InternalServerError',
+      message: process.env.NODE_ENV === 'production' 
+        ? 'Internal server error' 
+        : error.message,
+    },
+    timestamp: new Date().toISOString(),
+    path: req.path,
+  });
+};
+
+const handlePrismaError = (error, res) => {
+  switch (error.code) {
+    case 'P2002':
+      return res.status(409).json({
+        success: false,
+        error: {
+          type: 'ConflictError',
+          message: 'A record with this data already exists',
+          field: error.meta?.target,
+        },
+      });
+    case 'P2025':
+      return res.status(404).json({
+        success: false,
+        error: {
+          type: 'NotFoundError',
+          message: 'Record not found',
+        },
+      });
+    default:
+      return res.status(500).json({
+        success: false,
+        error: {
+          type: 'DatabaseError',
+          message: 'Database operation failed',
+        },
+      });
+  }
+};
+
+const notFoundHandler = (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      type: 'NotFoundError',
+      message: `Route ${req.method} ${req.path} not found`,
+    },
+    timestamp: new Date().toISOString(),
+  });
+};
+
+module.exports = {
+  BaseError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  ConflictError,
+  DatabaseError,
+  errorHandler,
+  notFoundHandler,
+};
+```
+
+#### Advanced Logging System
+```javascript
+// filepath: src/shared/utils/logger.js
+const winston = require('winston');
+const path = require('path');
+
+// Custom log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json(),
+  winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
+    return JSON.stringify({
+      timestamp,
+      level,
+      message,
+      ...(stack && { stack }),
+      ...meta,
+    });
+  })
+);
+
+// Create logger instance
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: logFormat,
+  defaultMeta: {
+    service: 'restofy-api',
+    version: process.env.npm_package_version || '1.0.0',
+  },
+  transports: [
+    // Console transport
+    new winston.transports.Console({
+      format: process.env.NODE_ENV === 'production' 
+        ? logFormat 
+        : winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple()
+          ),
+    }),
+  ],
+});
+
+// Add file transports for production
+if (process.env.NODE_ENV === 'production') {
+  logger.add(new winston.transports.File({
+    filename: path.join(__dirname, '../../../logs/error.log'),
+    level: 'error',
+    maxsize: 5242880, // 5MB
+    maxFiles: 5,
+  }));
+
+  logger.add(new winston.transports.File({
+    filename: path.join(__dirname, '../../../logs/combined.log'),
+    maxsize: 5242880, // 5MB
+    maxFiles: 10,
+  }));
+}
+
+// Request logging middleware
+const requestLogger = (req, res, next) => {
+  const start = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const logData = {
+      method: req.method,
+      url: req.url,
+      status: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      userId: res.locals.user?.userId,
+    };
+
+    if (res.statusCode >= 400) {
+      logger.warn('HTTP request completed with error', logData);
+    } else {
+      logger.info('HTTP request completed', logData);
+    }
+  });
+
+  next();
+};
+
+module.exports = { logger, requestLogger };
+```
+
+#### Comprehensive Configuration Management
+```javascript
+// filepath: src/config/index.js
+const path = require('path');
+require('dotenv').config();
+
+const validateEnvVar = (name, defaultValue = null, required = true) => {
+  const value = process.env[name];
+  if (required && !value) {
+    throw new Error(`Environment variable ${name} is required`);
+  }
+  return value || defaultValue;
+};
+
+const config = {
+  app: {
+    name: 'Restofy API',
+    env: validateEnvVar('NODE_ENV', 'development', false),
+    port: parseInt(validateEnvVar('PORT', '3000', false)),
+    host: validateEnvVar('HOST', '0.0.0.0', false),
+    maxRequestSize: validateEnvVar('MAX_REQUEST_SIZE', '10mb', false),
+    cookieSecret: validateEnvVar('COOKIE_SECRET'),
+    trustProxy: validateEnvVar('TRUST_PROXY', 'false', false) === 'true',
+  },
+
+  database: {
+    url: validateEnvVar('DATABASE_URL'),
+    maxConnections: parseInt(validateEnvVar('DB_MAX_CONNECTIONS', '10', false)),
+    connectionTimeout: parseInt(validateEnvVar('DB_CONNECTION_TIMEOUT', '30000', false)),
+  },
+
+  redis: {
+    url: validateEnvVar('REDIS_URL', 'redis://localhost:6379', false),
+    ttl: parseInt(validateEnvVar('REDIS_TTL', '300', false)), // 5 minutes
+    maxRetries: parseInt(validateEnvVar('REDIS_MAX_RETRIES', '3', false)),
+  },
+
+  auth: {
+    jwtSecret: validateEnvVar('JWT_SECRET'),
+    jwtExpiration: validateEnvVar('JWT_EXPIRATION', '7d', false),
+    jwtRefreshExpiration: validateEnvVar('JWT_REFRESH_EXPIRATION', '30d', false),
+    bcryptRounds: parseInt(validateEnvVar('BCRYPT_ROUNDS', '12', false)),
+  },
+
+  cors: {
+    origins: validateEnvVar('CORS_ORIGINS', 'http://localhost:3000', false)
+      .split(',')
+      .map(origin => origin.trim()),
+    credentials: validateEnvVar('CORS_CREDENTIALS', 'true', false) === 'true',
+  },
+
+  rateLimit: {
+    windowMs: parseInt(validateEnvVar('RATE_LIMIT_WINDOW_MS', '900000', false)), // 15 minutes
+    max: parseInt(validateEnvVar('RATE_LIMIT_MAX', '100', false)),
+    authWindowMs: parseInt(validateEnvVar('AUTH_RATE_LIMIT_WINDOW_MS', '900000', false)), // 15 minutes
+    authMax: parseInt(validateEnvVar('AUTH_RATE_LIMIT_MAX', '5', false)),
+  },
+
+  logging: {
+    level: validateEnvVar('LOG_LEVEL', 'info', false),
+    maxFiles: parseInt(validateEnvVar('LOG_MAX_FILES', '10', false)),
+    maxSize: validateEnvVar('LOG_MAX_SIZE', '5MB', false),
+  },
+
+  monitoring: {
+    enableMetrics: validateEnvVar('ENABLE_METRICS', 'false', false) === 'true',
+    metricsPort: parseInt(validateEnvVar('METRICS_PORT', '9090', false)),
+  },
+
+  email: {
+    host: validateEnvVar('EMAIL_HOST', null, false),
+    port: parseInt(validateEnvVar('EMAIL_PORT', '587', false)),
+    user: validateEnvVar('EMAIL_USER', null, false),
+    password: validateEnvVar('EMAIL_PASSWORD', null, false),
+    from: validateEnvVar('EMAIL_FROM', null, false),
+  },
+
+  aws: {
+    accessKeyId: validateEnvVar('AWS_ACCESS_KEY_ID', null, false),
+    secretAccessKey: validateEnvVar('AWS_SECRET_ACCESS_KEY', null, false),
+    region: validateEnvVar('AWS_REGION', 'us-east-1', false),
+    s3Bucket: validateEnvVar('AWS_S3_BUCKET', null, false),
+  },
+};
+
+// Validate critical configurations
+if (config.app.env === 'production') {
+  const criticalVars = [
+    'DATABASE_URL',
+    'JWT_SECRET',
+    'COOKIE_SECRET',
+  ];
+  
+  criticalVars.forEach(varName => {
+    if (!process.env[varName]) {
+      throw new Error(`Critical environment variable ${varName} is missing in production`);
+    }
+  });
+}
+
+module.exports = config;
+```
+
+#### Advanced Route Organization
+```javascript
+// filepath: src/routes/index.js
+const express = require('express');
+const { authenticate } = require('../shared/middleware/auth');
+const { createRateLimit } = require('../shared/middleware/security');
+const { requestLogger } = require('../shared/utils/logger');
+
+// Route imports
+const authRoutes = require('../domains/auth/router');
+const publicRoutes = require('./public');
+const v1Routes = require('./v1');
+const adminRoutes = require('./admin');
+
+const router = express.Router();
+
+// Global middleware for all API routes
+router.use(requestLogger);
+
+// Public routes (no authentication required)
+router.use('/public', createRateLimit(15 * 60 * 1000, 50, 'Too many public requests'), publicRoutes);
+
+// Authentication routes
+router.use('/auth', createRateLimit(15 * 60 * 1000, 10, 'Too many auth requests'), authRoutes);
+
+// Protected API routes
+router.use('/v1', authenticate, v1Routes);
+
+// Admin routes (require admin role)
+router.use('/admin', authenticate, adminRoutes);
+
+// API documentation routes (if using Swagger)
+if (process.env.NODE_ENV !== 'production') {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerDocument = require('../docs/swagger.json');
+  
+  router.use('/docs', swaggerUi.serve);
+  router.get('/docs', swaggerUi.setup(swaggerDocument));
+}
+
+module.exports = router;
+```
+
+#### Health Check System
+```javascript
+// filepath: src/shared/utils/healthCheck.js
+const { PrismaClient } = require('@prisma/client');
+const Redis = require('ioredis');
+const config = require('../../config');
+
+const prisma = new PrismaClient();
+const redis = new Redis(config.redis.url);
+
+const checkDatabase = async () => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { status: 'healthy', message: 'Database connection successful' };
+  } catch (error) {
+    return { status: 'unhealthy', message: error.message };
+  }
+};
+
+const checkRedis = async () => {
+  try {
+    await redis.ping();
+    return { status: 'healthy', message: 'Redis connection successful' };
+  } catch (error) {
+    return { status: 'unhealthy', message: error.message };
+  }
+};
+
+const checkExternalServices = async () => {
+  // Add checks for external services like payment gateways, email services, etc.
+  return { status: 'healthy', message: 'All external services operational' };
+};
+
+const getHealthStatus = async () => {
+  const checks = {
+    database: await checkDatabase(),
+    redis: await checkRedis(),
+    externalServices: await checkExternalServices(),
+  };
+
+  const isHealthy = Object.values(checks).every(check => check.status === 'healthy');
+
+  return {
+    status: isHealthy ? 'healthy' : 'unhealthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    checks,
+  };
+};
+
+module.exports = { getHealthStatus };
+```
+
+#### Production Dockerfile
+```dockerfile
+# filepath: Dockerfile
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nodejs
+
+# Copy necessary files
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/src ./src
+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+
+USER nodejs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["node", "src/server.js"]
+```
+
+#### Docker Compose for Production
+```yaml
+# filepath: docker-compose.prod.yml
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://user:password@postgres:5432/restofy
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - restofy-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=restofy
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    restart: unless-stopped
+    networks:
+      - restofy-network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - restofy-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - restofy-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  restofy-network:
+    driver: bridge
+```
+
+#### Environment Variables Template
+```bash
+# filepath: .env.example
+# Application
+NODE_ENV=production
+PORT=3000
+HOST=0.0.0.0
+MAX_REQUEST_SIZE=10mb
+TRUST_PROXY=true
+
+# Database
+DATABASE_URL=postgresql://username:password@localhost:5432/restofy
+DB_MAX_CONNECTIONS=10
+DB_CONNECTION_TIMEOUT=30000
+
+# Redis
+REDIS_URL=redis://localhost:6379
+REDIS_TTL=300
+REDIS_MAX_RETRIES=3
+
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRATION=7d
+JWT_REFRESH_EXPIRATION=30d
+BCRYPT_ROUNDS=12
+COOKIE_SECRET=your-super-secret-cookie-key
+
+# CORS
+CORS_ORIGINS=http://localhost:3000,https://your-domain.com
+CORS_CREDENTIALS=true
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+AUTH_RATE_LIMIT_WINDOW_MS=900000
+AUTH_RATE_LIMIT_MAX=5
+
+# Logging
+LOG_LEVEL=info
+LOG_MAX_FILES=10
+LOG_MAX_SIZE=5MB
+
+# Monitoring
+ENABLE_METRICS=true
+METRICS_PORT=9090
+
+# Email (Optional)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=noreply@restofy.com
+
+# AWS (Optional)
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=restofy-uploads
+```
+
+### Implementation Checklist
+
+#### Phase 1: Security & Foundation
+- [ ] Add Helmet middleware
+- [ ] Implement proper CORS configuration
+- [ ] Add request size limits
+- [ ] Create comprehensive error handling
+- [ ] Set up production logging
+
+#### Phase 2: Monitoring & Health
+- [ ] Implement health check endpoints
+- [ ] Add request/response logging
+- [ ] Set up performance monitoring
+- [ ] Add graceful shutdown handling
+
+#### Phase 3: Configuration & Deployment
+- [ ] Create environment-specific configs
+- [ ] Add Docker configuration
+- [ ] Set up CI/CD pipeline
+- [ ] Configure load balancer/reverse proxy
+
+#### Phase 4: Advanced Features
+- [ ] Implement caching strategies
+- [ ] Add job queue system
+- [ ] Set up real-time features
+- [ ] Add comprehensive testing
+
+This complete production-level implementation provides enterprise-grade security, monitoring, error handling, and deployment capabilities for the Restofy platform.

@@ -67,7 +67,7 @@ const Reservations = () => {
     if (window.confirm('Are you sure you want to delete this reservation?')) {
       try {
         await axios.delete(`/api/restaurants/${restaurantId}/reservations/${reservationId}`);
-        setReservations(reservations.filter(r => r.id !== reservationId));
+      setReservations(reservations.filter(r => r.id !== reservationId));
       } catch (err) {
         setError('Failed to delete reservation.');
       }

@@ -21,7 +21,7 @@ const Tables = () => {
       } catch (err) {
         setError('Failed to load tables.');
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
     fetchTables();
@@ -62,7 +62,7 @@ const Tables = () => {
     if (window.confirm('Are you sure you want to delete this table?')) {
       try {
         await axios.delete(`/api/restaurants/${restaurantId}/table/${tableId}`);
-        setTables(tables.filter(t => t.id !== tableId));
+      setTables(tables.filter(t => t.id !== tableId));
       } catch (err) {
         setError('Failed to delete table.');
       }

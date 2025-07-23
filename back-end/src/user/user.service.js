@@ -5,10 +5,22 @@ const create = async (userData) => {
       data: userData,
   });
 };
-const read = async (email) => {
+const read = async (userId, restaurantId) => {
   return await prisma.restaurantEmployee.findUnique({
     where: {
-      email: email,
+      id: Number(userId),
+      restaurantId: Number(restaurantId),
+    },
+  });
+};
+const getAllUsers = async (restaurantId, userId) => {
+  return await prisma.restaurantEmployee.findMany({
+    where: {
+      restaurantId: Number(restaurantId),
+      addedByUserId: Number(userId),
+    },
+    include: {
+      address: true,
     },
   });
 };
@@ -16,4 +28,5 @@ const read = async (email) => {
 module.exports = {
   create,
   read,
+  getAllUsers,
 };

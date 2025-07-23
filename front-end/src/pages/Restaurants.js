@@ -36,7 +36,7 @@ const Restaurants = () => {
       } catch (err) {
         setError('Failed to load restaurants.');
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
     fetchRestaurants();
@@ -56,7 +56,7 @@ const Restaurants = () => {
     if (window.confirm('Are you sure you want to delete this restaurant?')) {
       try {
         await axios.delete(`/api/restaurants/${restaurantId}`);
-        setRestaurants(restaurants.filter(r => r.restaurantId !== restaurantId));
+      setRestaurants(restaurants.filter(r => r.restaurantId !== restaurantId));
       } catch (err) {
         setError('Failed to delete restaurant.');
       }
@@ -70,20 +70,20 @@ const Restaurants = () => {
 
   const handleSave = async (restaurantData) => {
     try {
-      if (editingRestaurant) {
-        // Update existing restaurant
+    if (editingRestaurant) {
+      // Update existing restaurant
         const response = await axios.put(`/api/restaurants/${editingRestaurant.restaurantId}`, restaurantData);
-        setRestaurants(restaurants.map(r =>
-          r.restaurantId === editingRestaurant.restaurantId
+      setRestaurants(restaurants.map(r => 
+        r.restaurantId === editingRestaurant.restaurantId 
             ? response.data.data
-            : r
-        ));
-      } else {
-        // Add new restaurant
+          : r
+      ));
+    } else {
+      // Add new restaurant
         const response = await axios.post('/api/restaurants', restaurantData);
         setRestaurants([...restaurants, response.data.data]);
-      }
-      handleModalClose();
+    }
+    handleModalClose();
     } catch (err) {
       setError('Failed to save restaurant.');
     }

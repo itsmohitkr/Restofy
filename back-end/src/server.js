@@ -2,7 +2,7 @@
 
 require("dotenv").config(); // Load environment variables from .env
 const app = require("./app");
-const prisma = require("../prisma/client");
+const prisma = require("./infrastructure/database/prisma/client");
 const { exec } = require("child_process");
 
 const PORT = process.env.PORT || 3001;

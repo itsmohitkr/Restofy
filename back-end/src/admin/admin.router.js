@@ -1,4 +1,4 @@
-const router = require("express").Route({ meregeParam: true });
+const router = require("express").Router({ mergeParams: true });
 const controller = require('./admin.controller');
 
 

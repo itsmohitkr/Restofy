@@ -4,15 +4,14 @@ const cors = require("cors");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 
-const pathNotFound = require("./error/pathNotFound");
-const errorHandler = require("./error/errorHandler");
+const pathNotFound = require("./shared/error/pathNotFound");
+const errorHandler = require("./shared/error/errorHandler");
 
 // Routes
-const apiLimiter = require("./rateLimiter/apiLimiter");
-const restaurantRoutes = require("./restaurant/restaurant.router");
-const adminRoutes = require("./admin/admin.router");
-const authRoutes = require("./authentication/auth.router");
-const { restrictToAuthenticatedUser } = require("./middleware/restrictToLoggedInUser");
+const apiLimiter = require("./shared/security/apiLimiter");
+const routes = require("./routes/index");
+
+// Note: Individual route imports moved to routes/index.js for better organization
 
 // Middleware
 app.use(cors());
@@ -22,13 +21,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
 app.use(apiLimiter); 
 
-app.use("/api/auth", authRoutes);
+// Main API routes
+app.use("/api", routes);
 
-app.use(restrictToAuthenticatedUser);
-
-
-app.use("/api/restaurants", restaurantRoutes);
-// app.use("/api/admin",adminRoutes);
 
 app.use(pathNotFound);
 app.use(errorHandler);

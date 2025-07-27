@@ -2,10 +2,18 @@ const jwt = require('jsonwebtoken');
 
 
 const generateToken = (user) => {
+
+    const role = user.role;
     const payload = {
       sub: user.id,
       role: user.role,
     };
+    if (role === 'Staff') {
+        payload.restaurantId = user.restaurantId;
+        payload.addedByUserId = user.addedByUserId;
+    }
+    console.log("Generating token for user:", payload);
+    
 
     const token = jwt.sign(payload, process.env.JWT_SECRET);
     

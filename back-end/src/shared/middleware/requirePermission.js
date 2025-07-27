@@ -7,6 +7,7 @@ function requirePermission(permission) {
   return (req, res, next) => {
     
     const permissions = ROLE_PERMISSIONS[req.user.role] || [];
+    
     if (!permissions.includes(permission)) {
        
         return sendErrorResponse(

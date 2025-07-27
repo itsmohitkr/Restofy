@@ -75,6 +75,9 @@ const updateTable = async (req, res) => {
   const { tableId } = req.params;
   const restaurantId = req.restaurantId;
   const tableData = { ...req.body, restaurantId };
+  console.log("Updating table with data:", tableData);
+  
+  
 
   const updatedTable = await service.updateTable(tableId, tableData);
 

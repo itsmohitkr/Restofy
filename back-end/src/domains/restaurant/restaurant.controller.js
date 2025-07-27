@@ -64,7 +64,7 @@ const deleteRestaurant = async (req, res) => {
 };
 
 const getAllRestaurants = async (req, res) => {
-    const restaurants = await service.getAllRestaurants(req.userId);
+  const restaurants = await service.getAllRestaurants(req.userId);
     
   sendSuccessResponse(
     res,
@@ -76,8 +76,12 @@ const getAllRestaurants = async (req, res) => {
 
 const isRestaurantExist = async (req, res, next) => {
   const { restaurantId } = req.params;
+  let userId = req.userId;
+  if (req.user.role === "Staff") {
+      userId = req.user.addedByUserId;
+  }
 
-  const restaurant = await service.getRestaurant(restaurantId, req.userId);
+  const restaurant = await service.getRestaurant(restaurantId, userId);
   if (!restaurant) {
     return next({
       status: StatusCodes.NOT_FOUND,

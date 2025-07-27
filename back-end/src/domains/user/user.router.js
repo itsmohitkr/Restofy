@@ -2,28 +2,28 @@ const router = require("express").Router({ mergeParams: true });
 const controller = require("./user.controller");
 const methodNotAllowed = require("../../shared/error/methodNotAllowed");
 const validate = require("../../shared/middleware/validate");
-const { validateParam } = require("../../shared/middleware/validateParam");
-const { isRestaurantExist } = require("../restaurant/restaurant.controller");
 const {
-  checkRestaurantOwnership,
-} = require("../../shared/middleware/checkRestaurantOwnership");
-const { userSchema } = require("../../utils/validation/reqBodyValidation/user.validation");
+  userSchema,
+} = require("../../utils/validation/reqBodyValidation/user.validation");
 const requirePermission = require("../../shared/middleware/requirePermission");
 const { PERMISSIONS } = require("../../utils/constants/permissions");
 
-router.use(validateParam("restaurantId"));
-router.use(isRestaurantExist);
-router.use(checkRestaurantOwnership);
 
 router
   .route("/:userId")
-  .get(requirePermission(PERMISSIONS.CAN_VIEW_USER), controller.getUser)
+  .get(
+    requirePermission(PERMISSIONS.CAN_VIEW_USER),
+    controller.getUser
+  )
   .put(
     requirePermission(PERMISSIONS.CAN_UPDATE_USER),
     validate(controller.userSchema),
     controller.updateUser
   )
-  .delete(requirePermission(PERMISSIONS.CAN_DELETE_USER), controller.deleteUser)
+  .delete(
+    requirePermission(PERMISSIONS.CAN_DELETE_USER),
+    controller.deleteUser
+  )
   .all(methodNotAllowed);
 
 router
@@ -33,7 +33,10 @@ router
     validate(userSchema),
     controller.createUser
   )
-  .get(requirePermission(PERMISSIONS.CAN_VIEW_USERS), controller.getAllUsers)
+  .get(
+    requirePermission(PERMISSIONS.CAN_VIEW_USERS),
+    controller.getAllUsers
+  )
   .all(methodNotAllowed);
 
 module.exports = router;

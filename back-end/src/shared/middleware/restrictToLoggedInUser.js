@@ -50,6 +50,8 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
     }
 
     req.user = user; // Attach the full user object
+    console.log("Authenticated user:", req.user);
+    
     next();
   } catch (error) {
     return next({

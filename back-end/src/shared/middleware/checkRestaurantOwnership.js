@@ -1,8 +1,11 @@
 const { StatusCodes } = require("http-status-codes");
 
 const checkRestaurantOwnership = (req, res, next) => {
-  const userId = req.user.id; // coming from the jwt token
   const restaurantData = res.locals.restaurant;
+  let userId= req.user.id;
+  if (req.user.role === "Staff") {
+      userId = req.user.addedByUserId;
+  }
   
   if (!restaurantData || restaurantData.userId !== userId) {
     return res.status(StatusCodes.FORBIDDEN).json({

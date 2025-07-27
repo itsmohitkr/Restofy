@@ -9,6 +9,7 @@ const reservationRoutes = require('../../domains/reservation/reservation.router'
 const orderRoutes = require('../../domains/order/order.router');
 const billRoutes = require('../../domains/bill/bill.router');
 const paymentRoutes = require('../../domains/payment/payment.router');
+const userRoutes = require('../../domains/user/user.router');
 const { validateParam } = require('../../shared/middleware/validateParam');
 const { isRestaurantExist } = require('../../domains/restaurant/restaurant.controller');
 const { checkRestaurantOwnership } = require('../../shared/middleware/checkRestaurantOwnership');
@@ -20,6 +21,10 @@ router.use("/restaurants", restaurantRoutes);
 router.use("/restaurants/:restaurantId", validateParam("restaurantId"));
 router.use("/restaurants/:restaurantId", isRestaurantExist);
 router.use("/restaurants/:restaurantId", checkRestaurantOwnership);
+
+// user routes
+
+router.use("/restaurants/:restaurantId/user", userRoutes);
 
 // Table routes
 router.use("/restaurants/:restaurantId/table", tableRoutes);

@@ -5,6 +5,8 @@ const { orderSchema } = require("../../utils/validation/reqBodyValidation/order.
 const validate = require("../../shared/middleware/validate");
 const { validateParam } = require("../../shared/middleware/validateParam");
 const { isReservationExists } = require("../reservation/reservation.controller");
+const requirePermission = require("../../shared/middleware/requirePermission");
+const { PERMISSIONS } = require("../../utils/constants/permissions");
 
 // Middleware
 router.use(validateParam("reservationId"));
@@ -13,18 +15,29 @@ router.use(isReservationExists);
 // Routes
 router
   .route("/")
-  .post(validate(orderSchema), controller.createOrder)
+  .post(validate(orderSchema),
+    requirePermission(PERMISSIONS.CAN_CREATE_ORDER),
+    controller.createOrder)
   .all(methodNotAllowed);
 
 router
   .route("/:orderId")
-  .get(controller.getOrder)
-  .put(validate(orderSchema), controller.updateOrder)
+  .get(
+    requirePermission(PERMISSIONS.CAN_VIEW_ORDER),
+    controller.getOrder)
+  .put(
+    validate(orderSchema),
+    requirePermission(PERMISSIONS.CAN_UPDATE_ORDER),
+    controller.updateOrder
+  )
   .all(methodNotAllowed);
 
 router
   .route("/:orderId/complete")
-  .put(controller.completeOrder)
+  .put(
+    requirePermission(PERMISSIONS.CAN_COMPLETE_ORDER),
+    controller.completeOrder
+  )
   .all(methodNotAllowed);
 
 module.exports = router;

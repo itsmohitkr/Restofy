@@ -13,7 +13,7 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
     });
   }
   try {
-    const userPayload = getUserFromToken(token);
+    const userPayload = await getUserFromToken(token, "ACCESS_TOKEN");
     if (!userPayload) {
       return next({
         status: StatusCodes.UNAUTHORIZED,
@@ -50,7 +50,6 @@ const restrictToAuthenticatedUser = async (req, res, next) => {
     }
 
     req.user = user; // Attach the full user object
-    console.log("Authenticated user:", req.user);
     
     next();
   } catch (error) {

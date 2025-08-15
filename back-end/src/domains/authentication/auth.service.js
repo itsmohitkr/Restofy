@@ -2,6 +2,7 @@ const prisma = require("../../infrastructure/database/prisma/client");
 
 const read = async (email) => {
   let user = await prisma.user.findUnique({ where: { email } });
+
   if (user) {
     return user;
   }
@@ -28,7 +29,32 @@ const createUser = async (userData) => {
   return createdUser;
 };
 
+// await service.update(user.email, hashedPassword);
+const update = async (user, hashedPassword) => {
+  const updatedUser = await prisma.user.update({
+    where: { email: user.email },
+    data: { password: hashedPassword },
+  });
+  return updatedUser;
+};
+
+const resetPassword = async (user, hashedPassword) => {
+  // should be done in a transaction
+  await prisma.$transaction(async (prisma) => {
+    await prisma.user.update({
+      where: { email: user.email },
+      data: { password: hashedPassword },
+    });
+    
+    await prisma.token.deleteMany({
+      where: { userId: user.id },
+    });
+  });
+};
+
 module.exports = {
   read,
   createUser,
+  update,
+  resetPassword
 };

@@ -19,8 +19,6 @@ import Bills from './pages/Bills';
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   
-  console.log('ProtectedRoute: isAuthenticated =', isAuthenticated, 'loading =', loading);
-  
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -26,6 +26,7 @@ model User{
   isVerified  Boolean  @default(false) 
   address     Address?
   restaurants Restaurant[]
+  tokens      Token[]
   isActive    Boolean  @default(true)
 
   retaurantEmployees RestaurantEmployee[]
@@ -295,3 +296,32 @@ model Payment {
   updatedAt DateTime @updatedAt
 }
 
+enum TokenType {
+  ACCESS_TOKEN
+  REFRESH_TOKEN  
+  RESET_TOKEN
+  EMAIL_VERIFICATION
+  
+  @@map("token_types")
+}
+
+model Token{
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenId   String   @unique 
+  type      TokenType
+  token     String   @db.Text 
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Metadata
+  ipAddress String?
+  userAgent String?  
+  deviceInfo String?
+
+  @@map("tokens")
+}

@@ -1,4 +1,9 @@
 const jwt = require('jsonwebtoken');
+const { verifyTokenv2 } = require('../services/tokenServiceV2');
+const prisma = require('../../infrastructure/database/prisma/client');
+const { sendErrorResponse } = require('../../utils/helper/responseHelpers');
+const { StatusCodes } = require('http-status-codes');
+
 
 
 const generateToken = (user) => {
@@ -12,23 +17,35 @@ const generateToken = (user) => {
         payload.restaurantId = user.restaurantId;
         payload.addedByUserId = user.addedByUserId;
     }
-    console.log("Generating token for user:", payload);
-    
-
     const token = jwt.sign(payload, process.env.JWT_SECRET);
     
     return token;
 }
 
 
-const getUserFromToken = (token) => {
+const getUserFromToken = async(token,type) => {
     
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        return {
-          id: decoded.sub,
-          role: decoded.role,
-        };
+
+        // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = await verifyTokenv2(token, type)
+        const { tokenId } = decoded;
+        
+        // check if tokenId exists in the database and is not revoked
+        const tokenRecord = await prisma.token.findUnique({
+          where: { tokenId },
+        });
+        if (!tokenRecord || tokenRecord.isRevoked) {
+
+          return sendErrorResponse(res, StatusCodes.UNAUTHORIZED, "Invalid or revoked token", "Token error");
+        }
+        else {
+            
+            return {
+              id: decoded.sub,
+              role: decoded.role,
+            };
+        }
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
             throw new Error('Token expired');

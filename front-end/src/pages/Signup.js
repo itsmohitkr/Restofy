@@ -35,7 +35,7 @@ const Signup = () => {
         navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      // Signup error occurred
     } finally {
       setIsLoading(false);
     }

@@ -46,6 +46,7 @@ const createUser = async (req, res) => {
 
   const createdUser = await service.create(newUser);
 
+
   sendSuccessResponse(
     res,
     StatusCodes.CREATED,
@@ -77,8 +78,6 @@ const deleteUser = async (req, res) => {
     .json({ message: `User with ID ${userId} deleted successfully` });
 };
 const getAllUsers = async (req, res) => {
-  console.log("Fetching all users for restaurant:", req.params.restaurantId);
-  
   const restaurant = res.locals.restaurant;
   const users = await service.getAllUsers(restaurant.restaurantId, req.userId);
   if (!users) {

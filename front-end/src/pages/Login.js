@@ -19,18 +19,15 @@ const Login = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      console.log('Attempting login with:', data.email);
       const result = await login(data.email, data.password);
-      console.log('Login result:', result);
       
       if (result && result.success) {
-        console.log('Login successful, navigating to dashboard...');
         navigate('/dashboard');
       } else {
-        console.log('Login failed:', result?.error);
+        // Login failed
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // Login error occurred
     } finally {
       setIsLoading(false);
     }

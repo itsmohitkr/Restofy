@@ -12,6 +12,7 @@ const {
 const { sendResetEmail } = require("../../shared/services/emailService");
 const { generateTokenv2, verifyTokenv2 } = require("../../shared/services/tokenServiceV2");
 const prisma = require("../../infrastructure/database/prisma/client");
+const { sendEmailJob } = require("../../shared/services/emailProducer");
 
 const signup = async (req, res, next) => {
   const { firstName, lastName, email, phoneNumber, password, address } =
@@ -181,7 +182,8 @@ const forgotPassword = async (req, res, next) => {
     });
     
 
-  await sendResetEmail(user.email, resetTokenv2.token);
+  // await sendResetEmail(user.email, resetTokenv2.token);
+  await sendEmailJob({ email: user.email, token: resetTokenv2.token });
 
   sendSuccessResponse(
     res,

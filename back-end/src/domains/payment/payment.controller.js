@@ -9,6 +9,7 @@ const service = require("./payment.service");
 const { isOrderExist } = require("../order/order.controller");
 const { isBillExist } = require("../bill/bill.controller");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
+const emailTemplates = require("../../utils/constants/emailTemplates");
 
 const makePayment = async (req, res) => {
   const { billId, reservationId, orderId, restaurantId } = req.params;
@@ -64,20 +65,10 @@ const makePayment = async (req, res) => {
     );
   }
   sendSuccessResponse(res, StatusCodes.CREATED, payment);
-  sendEmailJob(
-    {
-      to: bill.customerEmail,
-      subject: `Payment Confirmation for Reservation ID: ${reservationId}`,
-      body: `
-             <h1>Payment Confirmation</h1>
-             <p>Dear ${bill.customerName},</p>
-             <p>Your payment of ${bill.totalAmount} has been successfully processed.</p>
-             <p>Thank you for dining with us!</p>
-             `,
-    },
-    "notification.send"
-  );
-  
+  // Send confirmation email
+  const emailTemplate = emailTemplates.PAYMENT_CONFIRMATION(bill);
+
+  sendEmailJob(emailTemplate, "notification.send");
 };
 
 module.exports = {

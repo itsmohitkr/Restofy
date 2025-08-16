@@ -1,19 +1,19 @@
 const { StatusCodes } = require("http-status-codes");
 const service = require("./auth.service");
-const { successResponse } = require("../../utils/helper/responseBody");
 const bcrypt = require("bcrypt");
 const asyncErrorBoundary = require("../../shared/error/asyncErrorBoundary");
-const { generateToken } = require("../../shared/middleware/tokenService");
 const jwt = require("jsonwebtoken");
 const {
   sendErrorResponse,
   sendSuccessResponse,
 } = require("../../utils/helper/responseHelpers");
-const { sendResetEmail, sendNotification } = require("../../shared/services/emailService");
-const { generateTokenv2, verifyTokenv2 } = require("../../shared/services/tokenServiceV2");
+const {
+  generateTokenv2,
+  verifyTokenv2,
+} = require("../../shared/services/tokenServiceV2");
 const prisma = require("../../infrastructure/database/prisma/client");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
-// const emailTemplatesHelper = require("../../utils/helper/emailTemplatesHelper");
+const emailTemplates = require("../../utils/constants/emailTemplates");
 
 const signup = async (req, res, next) => {
   const { firstName, lastName, email, phoneNumber, password, address } =
@@ -60,18 +60,12 @@ const signup = async (req, res, next) => {
     "User created successfully",
     createdUser
   );
-    // const emailTemplate = emailTemplatesHelper("SIGNUP_SUCCESS");
+  const emailTemplate = emailTemplates.SIGNUP_SUCCESS({
+    recipients: createdUser.email,
+  });
 
-   sendEmailJob(
-     {
-       to: createdUser.email,
-       subject: "Welcome to Our Service: Restofy",
-       body: "Thank you for signing up! We are excited to have you on board.",
-     },
-     "notification.send"
-   );
+  sendEmailJob(emailTemplate, "notification.send");
 };
-
 
 const login = async (req, res, next) => {
   const { email, password } = req.body;
@@ -106,7 +100,6 @@ const login = async (req, res, next) => {
   });
 
   sendSuccessResponse(res, StatusCodes.OK, "Login successful", user);
- 
 };
 const verifyToken = async (req, res, next) => {
   // Implementation for verifying the token
@@ -188,16 +181,18 @@ const forgotPassword = async (req, res, next) => {
     );
   }
 
-    const resetTokenv2 = await generateTokenv2(user, "RESET_TOKEN", "5m", {
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"],
-    });
-    
-  // testing
-  // const emailTemplate = emailTemplatesHelper("FORGOT_PASSWORD", { resetToken: resetTokenv2.token });
+  const resetTokenv2 = await generateTokenv2(user, "RESET_TOKEN", "5m", {
+    ipAddress: req.ip,
+    userAgent: req.headers["user-agent"],
+  });
 
-  // await sendResetEmail(user.email, resetTokenv2.token);
-  await sendEmailJob({ email: user.email, token: resetTokenv2.token }, "email.send");
+  // Send email
+  const emailTemplate = emailTemplates.FORGOT_PASSWORD({
+    recipients: user.email,
+    resetToken: resetTokenv2.token,
+  });
+
+  sendEmailJob(emailTemplate, "notification.send");
 
   sendSuccessResponse(
     res,
@@ -297,14 +292,11 @@ const resetPassword = async (req, res, next) => {
       StatusCodes.OK,
       "Password successfully reset. Please log in with your new password."
     );
-        // const emailTemplate = emailTemplatesHelper("RESET_PASSWORD_SUCCESS");
-
-    // send notification
-    sendEmailJob({
-      to: user.email,
-      subject: "Password Reset Successful",
-      body: "Your password has been successfully reset.",
-    },"notification.send");
+    // Send success email
+    const emailTemplate = emailTemplates.RESET_PASSWORD_SUCCESS({
+      recipients: user.email,
+    });
+    sendEmailJob(emailTemplate, "notification.send");
   } catch (error) {
     sendErrorResponse(
       res,

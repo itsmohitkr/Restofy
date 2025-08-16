@@ -1,13 +1,14 @@
 const asyncErrorBoundary = require("../../shared/error/asyncErrorBoundary");
 const { StatusCodes } = require("http-status-codes");
 const service = require("./reservation.service");
-const { successResponse, errorResponse } = require("../../utils/helper/responseBody");
 const { requireBody } = require("../../shared/middleware/requireBody");
-const { sendSuccessResponse, sendErrorResponse } = require("../../utils/helper/responseHelpers");
+const {
+  sendSuccessResponse,
+  sendErrorResponse,
+} = require("../../utils/helper/responseHelpers");
 const { validateParam } = require("../../shared/middleware/validateParam");
-const { isTableExist } = require("../tables/table.controller");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
-// const emailTemplatesHelper = require("../../utils/helper/emailTemplatesHelper");
+const emailTemplates = require("../../utils/constants/emailTemplates");
 
 const createReservation = async (req, res) => {
   const reservationData = {
@@ -23,20 +24,13 @@ const createReservation = async (req, res) => {
     newReservation
   );
 
-  // const emailTemplate = emailTemplatesHelper("RESERVATION_CONFIRMATION", newReservation);
+  const emailTemplate = emailTemplates.RESERVATION_CONFIRMATION(newReservation);
 
-  sendEmailJob(
-    {
-      to: newReservation.email,
-      subject: `Reservation Confirmation: ${newReservation.id}`,
-      body: `Hi ${newReservation.firstName},\n\nYour reservation has been successfully created with ID: ${newReservation.id}.\nDetails:\n- Date & Time: ${newReservation.reservationTime}\n- Number of Guests: ${newReservation.numberOfGuests}\n- Special Requests: ${newReservation.specialRequests || "None"}\n\nThank you for choosing us!`,
-    },
-    "notification.send"
-  );
-
+  sendEmailJob(emailTemplate, "notification.send");
 };
 const getAllReservations = async (req, res, next) => {
-  const { firstName, lastName, email, contact, status, reservationTime } = req.query;
+  const { firstName, lastName, email, contact, status, reservationTime } =
+    req.query;
   const filetr = {
     restaurantId: Number(req.restaurantId),
     ...(firstName && { firstName }),
@@ -48,7 +42,7 @@ const getAllReservations = async (req, res, next) => {
   };
 
   const reservations = await service.getAllReservations(filetr);
-  
+
   if (reservations.length === 0) {
     return sendErrorResponse(
       res,
@@ -117,7 +111,6 @@ const deleteReservation = async (req, res) => {
     "Reservation deleted successfully",
     null
   );
-  
 };
 const getReservationByKeyword = async (req, res) => {
   const { keyword } = req.query;
@@ -130,7 +123,10 @@ const getReservationByKeyword = async (req, res) => {
     );
   }
 
-  const reservations = await service.getReservationByKeyword(keyword, req.restaurantId);
+  const reservations = await service.getReservationByKeyword(
+    keyword,
+    req.restaurantId
+  );
 
   if (reservations.length === 0) {
     return sendErrorResponse(
@@ -155,7 +151,6 @@ const assignReservationToTable = async (req, res) => {
   const { tableId } = req.query;
   const restaurantId = req.restaurantId;
   const reservation = res.locals.reservation;
- 
 
   if (!tableId) {
     return sendErrorResponse(
@@ -184,7 +179,7 @@ const assignReservationToTable = async (req, res) => {
       "Conflict: Reservation Already Assigned"
     );
   }
-  if( reservation.status === "Completed") {
+  if (reservation.status === "Completed") {
     return sendErrorResponse(
       res,
       StatusCodes.BAD_REQUEST,
@@ -227,8 +222,8 @@ const assignReservationToTable = async (req, res) => {
 // url: /api/reservations/:reservationId/completed?tableId=1
 const markReservationAsCompleted = async (req, res) => {
   const { reservationId } = req.params;
-  const {tableId} = req.query;
-  const {reservation} = res.locals;
+  const { tableId } = req.query;
+  const { reservation } = res.locals;
 
   if (reservation.status === "Completed") {
     return sendErrorResponse(
@@ -274,28 +269,26 @@ const markReservationAsCompleted = async (req, res) => {
   }
   // Mark the reservation as completed
 
-
-
   const updatedReservation = await service.markReservationAsCompleted(
     reservationId,
     req.restaurantId
   );
-  
+
   sendSuccessResponse(
     res,
     StatusCodes.OK,
     "Reservation marked as completed successfully",
     updatedReservation
   );
-}
+};
 
 // url: /api/reservations/:reservationId/cancel
 const cancelReservation = async (req, res) => {
   const { reservationId } = req.params;
   const { reservation } = res.locals;
 
-  const {status} = reservation;
-  if (["Completed", "Cancelled","Seated"].includes(status)) {
+  const { status } = reservation;
+  if (["Completed", "Cancelled", "Seated"].includes(status)) {
     return sendErrorResponse(
       res,
       StatusCodes.BAD_REQUEST,
@@ -304,7 +297,7 @@ const cancelReservation = async (req, res) => {
     );
   }
 
-  const updatedReservation = await service.cancelReservation(
+  const cancelledReservation = await service.cancelReservation(
     reservationId,
     req.restaurantId
   );
@@ -313,16 +306,14 @@ const cancelReservation = async (req, res) => {
     res,
     StatusCodes.OK,
     "Reservation cancelled successfully",
-    updatedReservation
+    cancelledReservation
   );
-  sendEmailJob(
-    {
-      to: updatedReservation.email,
-      subject: `Reservation Cancellation: ${updatedReservation.id}`,
-      body: `Hi ${updatedReservation.firstName},\n\nYour reservation with ID: ${updatedReservation.id} has been cancelled.\n\nThank you for choosing us!`,
-    },
-    "notification.send"
-  );
+  // Send cancellation email
+
+  const emailTemplate =
+    emailTemplates.RESERVATION_CANCELLATION(cancelledReservation);
+
+  sendEmailJob(emailTemplate, "notification.send");
 };
 
 module.exports = {
@@ -352,7 +343,7 @@ module.exports = {
   ],
 
   markReservationAsCompleted: [
-    validateParam("reservationId","tableId"),
+    validateParam("reservationId", "tableId"),
     isReservationExists,
     asyncErrorBoundary(markReservationAsCompleted),
   ],
@@ -362,5 +353,4 @@ module.exports = {
     asyncErrorBoundary(cancelReservation),
   ],
   isReservationExists: asyncErrorBoundary(isReservationExists),
-  
 };

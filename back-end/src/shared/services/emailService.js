@@ -29,31 +29,13 @@ const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
   );
 };
 
-async function sendResetEmail(email, resetToken) {
-  const resetLink = `${process.env.CLIENT_FRONTEND_URL}/api/auth/reset-password?token=${resetToken}`;
-
-  const mailOptions = {
-    from: process.env.EMAIL_USERNAME, // Sender address
-    to: email, // Recipient's email address
-    subject: "Password Reset Request",
-    text: `You requested a password reset. Please use the following link to reset your password: ${resetLink}`,
-    html: `<p>You requested a password reset. Please use the following link to reset your password:</p>
-               <a href="${resetLink}">Reset Your Password</a>`,
-  };
-  try {
-    return await sendEmailWithRetry(mailOptions, 3);
-  } catch (error) {
-    throw new Error("Failed to send reset email");
-  }
-}
-
 async function sendNotification(notificationData) {
   const mailOptions = {
-    from: process.env.EMAIL_USERNAME, // Sender address
-    to: notificationData.to, // Recipient's email address
+    from: process.env.EMAIL_USERNAME,
+    to: notificationData.to,
     subject: notificationData.subject,
-    text: notificationData.body,
-    html: `<p>${notificationData.body}</p>`,
+    text: notificationData.text,
+    html: notificationData.html,
   };
   try {
     return await sendEmailWithRetry(mailOptions, 3);
@@ -63,6 +45,5 @@ async function sendNotification(notificationData) {
 }
 
 module.exports = {
-  sendResetEmail,
   sendNotification,
 };

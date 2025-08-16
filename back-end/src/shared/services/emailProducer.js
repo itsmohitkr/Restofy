@@ -1,18 +1,25 @@
 
 const { getRabbitConnection } = require('../queues/rabbitmq');
 
-async function sendEmailJob(emailData) {
+async function sendEmailJob(emailData, routingKey) {
     try {
         const connection = await getRabbitConnection();
         const channel = await connection.createChannel();
-        const queue = "emailQueue";
         const exchange = "emailExchange";
-        const routingKey = "email.send";
 
-        await channel.assertExchange(exchange, "direct", { durable: true });
+        await channel.assertExchange(exchange, "direct", {
+          durable: true,
+        });
 
-        await channel.assertQueue(queue, { durable: true });
-        await channel.bindQueue(queue, exchange, routingKey);
+        await channel.assertQueue("emailQueue", { durable: true });
+        await channel.assertQueue("notificationQueue", { durable: true });
+        await channel.bindQueue("emailQueue", exchange, "email.send");
+        await channel.bindQueue(
+          "notificationQueue",
+          exchange,
+          "notification.send"
+        );
+
         channel.publish(
           exchange,
           routingKey,
@@ -21,6 +28,7 @@ async function sendEmailJob(emailData) {
             persistent: true,
           }
         );
+        
 
         console.log("Email sent to queue:", emailData);
     } catch (error) {

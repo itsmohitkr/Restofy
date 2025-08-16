@@ -9,10 +9,11 @@ const {
   sendErrorResponse,
   sendSuccessResponse,
 } = require("../../utils/helper/responseHelpers");
-const { sendResetEmail } = require("../../shared/services/emailService");
+const { sendResetEmail, sendNotification } = require("../../shared/services/emailService");
 const { generateTokenv2, verifyTokenv2 } = require("../../shared/services/tokenServiceV2");
 const prisma = require("../../infrastructure/database/prisma/client");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
+// const emailTemplatesHelper = require("../../utils/helper/emailTemplatesHelper");
 
 const signup = async (req, res, next) => {
   const { firstName, lastName, email, phoneNumber, password, address } =
@@ -59,6 +60,16 @@ const signup = async (req, res, next) => {
     "User created successfully",
     createdUser
   );
+    // const emailTemplate = emailTemplatesHelper("SIGNUP_SUCCESS");
+
+   sendEmailJob(
+     {
+       to: createdUser.email,
+       subject: "Welcome to Our Service: Restofy",
+       body: "Thank you for signing up! We are excited to have you on board.",
+     },
+     "notification.send"
+   );
 };
 
 
@@ -95,6 +106,7 @@ const login = async (req, res, next) => {
   });
 
   sendSuccessResponse(res, StatusCodes.OK, "Login successful", user);
+ 
 };
 const verifyToken = async (req, res, next) => {
   // Implementation for verifying the token
@@ -181,9 +193,11 @@ const forgotPassword = async (req, res, next) => {
       userAgent: req.headers["user-agent"],
     });
     
+  // testing
+  // const emailTemplate = emailTemplatesHelper("FORGOT_PASSWORD", { resetToken: resetTokenv2.token });
 
   // await sendResetEmail(user.email, resetTokenv2.token);
-  await sendEmailJob({ email: user.email, token: resetTokenv2.token });
+  await sendEmailJob({ email: user.email, token: resetTokenv2.token }, "email.send");
 
   sendSuccessResponse(
     res,
@@ -194,10 +208,9 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const token  = req.query?.token;
+    const token = req.query?.token;
     const { newPassword, confirmPassword } = req.body;
 
-  
     if (!token) {
       return sendErrorResponse(
         res,
@@ -206,7 +219,7 @@ const resetPassword = async (req, res, next) => {
         "Missing reset token"
       );
     }
-    
+
     if (!newPassword) {
       return sendErrorResponse(
         res,
@@ -237,7 +250,7 @@ const resetPassword = async (req, res, next) => {
     // Verify the JWT token
     const decoded = await verifyTokenv2(token, "RESET_TOKEN");
 
-    const tokenRecord= await prisma.token.findUnique({
+    const tokenRecord = await prisma.token.findUnique({
       where: { tokenId: decoded.tokenId },
     });
 
@@ -261,7 +274,7 @@ const resetPassword = async (req, res, next) => {
       );
     }
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
-      
+
     if (isSamePassword) {
       return sendErrorResponse(
         res,
@@ -273,7 +286,7 @@ const resetPassword = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await service.resetPassword(user, hashedPassword);
-      
+
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -282,8 +295,16 @@ const resetPassword = async (req, res, next) => {
     sendSuccessResponse(
       res,
       StatusCodes.OK,
-      "Password successfully reset. Please log in with your new password.",
+      "Password successfully reset. Please log in with your new password."
     );
+        // const emailTemplate = emailTemplatesHelper("RESET_PASSWORD_SUCCESS");
+
+    // send notification
+    sendEmailJob({
+      to: user.email,
+      subject: "Password Reset Successful",
+      body: "Your password has been successfully reset.",
+    },"notification.send");
   } catch (error) {
     sendErrorResponse(
       res,

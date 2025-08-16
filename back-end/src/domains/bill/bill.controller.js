@@ -18,7 +18,7 @@ const createBill = async (req, res) => {
     restaurantAddress,
     restaurantEmail,
   } = res.locals.restaurant;
-  const { firstName } = res.locals.reservation;
+  const { firstName, email } = res.locals.reservation;
   const { order } = res.locals;
   const { status, orderItems } = order;
   if (status !== "Finalized") {
@@ -57,6 +57,7 @@ const createBill = async (req, res) => {
     restaurantAddress,
     customerName: firstName,
     customerPhoneNumber: reservation.contact,
+    customerEmail: email,
 
     restaurantId: Number(restaurantId),
     reservationId: Number(reservationId),

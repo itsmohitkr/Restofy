@@ -6,6 +6,8 @@ const { requireBody } = require("../../shared/middleware/requireBody");
 const { sendSuccessResponse, sendErrorResponse } = require("../../utils/helper/responseHelpers");
 const { validateParam } = require("../../shared/middleware/validateParam");
 const { isTableExist } = require("../tables/table.controller");
+const { sendEmailJob } = require("../../shared/services/emailProducer");
+// const emailTemplatesHelper = require("../../utils/helper/emailTemplatesHelper");
 
 const createReservation = async (req, res) => {
   const reservationData = {
@@ -20,6 +22,18 @@ const createReservation = async (req, res) => {
     "Reservation created successfully",
     newReservation
   );
+
+  // const emailTemplate = emailTemplatesHelper("RESERVATION_CONFIRMATION", newReservation);
+
+  sendEmailJob(
+    {
+      to: newReservation.email,
+      subject: `Reservation Confirmation: ${newReservation.id}`,
+      body: `Hi ${newReservation.firstName},\n\nYour reservation has been successfully created with ID: ${newReservation.id}.\nDetails:\n- Date & Time: ${newReservation.reservationTime}\n- Number of Guests: ${newReservation.numberOfGuests}\n- Special Requests: ${newReservation.specialRequests || "None"}\n\nThank you for choosing us!`,
+    },
+    "notification.send"
+  );
+
 };
 const getAllReservations = async (req, res, next) => {
   const { firstName, lastName, email, contact, status, reservationTime } = req.query;
@@ -103,6 +117,7 @@ const deleteReservation = async (req, res) => {
     "Reservation deleted successfully",
     null
   );
+  
 };
 const getReservationByKeyword = async (req, res) => {
   const { keyword } = req.query;
@@ -299,6 +314,14 @@ const cancelReservation = async (req, res) => {
     StatusCodes.OK,
     "Reservation cancelled successfully",
     updatedReservation
+  );
+  sendEmailJob(
+    {
+      to: updatedReservation.email,
+      subject: `Reservation Cancellation: ${updatedReservation.id}`,
+      body: `Hi ${updatedReservation.firstName},\n\nYour reservation with ID: ${updatedReservation.id} has been cancelled.\n\nThank you for choosing us!`,
+    },
+    "notification.send"
   );
 };
 

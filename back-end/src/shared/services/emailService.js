@@ -47,6 +47,22 @@ async function sendResetEmail(email, resetToken) {
   }
 }
 
+async function sendNotification(notificationData) {
+  const mailOptions = {
+    from: process.env.EMAIL_USERNAME, // Sender address
+    to: notificationData.to, // Recipient's email address
+    subject: notificationData.subject,
+    text: notificationData.body,
+    html: `<p>${notificationData.body}</p>`,
+  };
+  try {
+    return await sendEmailWithRetry(mailOptions, 3);
+  } catch (error) {
+    throw new Error("Failed to send notification");
+  }
+}
+
 module.exports = {
   sendResetEmail,
+  sendNotification,
 };

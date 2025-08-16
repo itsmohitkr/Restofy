@@ -239,6 +239,7 @@ model Bill {
   restaurantAddress     String
   customerName          String
   customerPhoneNumber   String
+  customerEmail         String @default("")
 
   // Foreign keys for queryability (optional, set null on delete)
   restaurantId  Int?

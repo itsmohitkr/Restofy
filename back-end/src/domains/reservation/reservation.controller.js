@@ -26,7 +26,7 @@ const createReservation = async (req, res) => {
 
   const emailTemplate = emailTemplates.RESERVATION_CONFIRMATION(newReservation);
 
-  sendEmailJob(emailTemplate, "notification.send");
+  sendEmailJob({type: "RESERVATION_CONFIRMATION", recipients: newReservation.email, variables: { ...newReservation }}, "notification.send");
 };
 const getAllReservations = async (req, res, next) => {
   const { firstName, lastName, email, contact, status, reservationTime } =
@@ -308,12 +308,7 @@ const cancelReservation = async (req, res) => {
     "Reservation cancelled successfully",
     cancelledReservation
   );
-  // Send cancellation email
-
-  const emailTemplate =
-    emailTemplates.RESERVATION_CANCELLATION(cancelledReservation);
-
-  sendEmailJob(emailTemplate, "notification.send");
+  sendEmailJob({type: "RESERVATION_CANCELLATION", recipients: cancelledReservation.email, variables: { ...cancelledReservation }}, "notification.send");
 };
 
 module.exports = {

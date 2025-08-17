@@ -9,7 +9,6 @@ const service = require("./payment.service");
 const { isOrderExist } = require("../order/order.controller");
 const { isBillExist } = require("../bill/bill.controller");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
-const emailTemplates = require("../../utils/constants/emailTemplates");
 
 const makePayment = async (req, res) => {
   const { billId, reservationId, orderId, restaurantId } = req.params;
@@ -66,9 +65,8 @@ const makePayment = async (req, res) => {
   }
   sendSuccessResponse(res, StatusCodes.CREATED, payment);
   // Send confirmation email
-  const emailTemplate = emailTemplates.PAYMENT_CONFIRMATION(bill);
 
-  sendEmailJob(emailTemplate, "notification.send");
+  sendEmailJob({type: "PAYMENT_CONFIRMATION", recipients: bill.customerEmail, variables: { ...bill }}, "notification.send");
 };
 
 module.exports = {

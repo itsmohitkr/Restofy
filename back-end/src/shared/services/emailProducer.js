@@ -29,7 +29,6 @@ async function sendEmailJob(emailData, routingKey) {
           }
         );
         
-
         console.log("Email sent to queue:", emailData);
     } catch (error) {
         console.error("Error sending email to queue:", error);

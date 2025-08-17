@@ -13,7 +13,6 @@ const {
 } = require("../../shared/services/tokenServiceV2");
 const prisma = require("../../infrastructure/database/prisma/client");
 const { sendEmailJob } = require("../../shared/services/emailProducer");
-const emailTemplates = require("../../utils/constants/emailTemplates");
 
 const signup = async (req, res, next) => {
   const { firstName, lastName, email, phoneNumber, password, address } =
@@ -60,11 +59,8 @@ const signup = async (req, res, next) => {
     "User created successfully",
     createdUser
   );
-  const emailTemplate = emailTemplates.SIGNUP_SUCCESS({
-    recipients: createdUser.email,
-  });
 
-  sendEmailJob(emailTemplate, "notification.send");
+  sendEmailJob({type:"SIGNUP_SUCCESS",recipients: createdUser.email}, "notification.send");
 };
 
 const login = async (req, res, next) => {
@@ -186,13 +182,8 @@ const forgotPassword = async (req, res, next) => {
     userAgent: req.headers["user-agent"],
   });
 
-  // Send email
-  const emailTemplate = emailTemplates.FORGOT_PASSWORD({
-    recipients: user.email,
-    resetToken: resetTokenv2.token,
-  });
 
-  sendEmailJob(emailTemplate, "notification.send");
+  sendEmailJob({type: "FORGOT_PASSWORD", recipients: user.email, variables: { resetToken: resetTokenv2.token }}, "notification.send");
 
   sendSuccessResponse(
     res,
@@ -292,11 +283,8 @@ const resetPassword = async (req, res, next) => {
       StatusCodes.OK,
       "Password successfully reset. Please log in with your new password."
     );
-    // Send success email
-    const emailTemplate = emailTemplates.RESET_PASSWORD_SUCCESS({
-      recipients: user.email,
-    });
-    sendEmailJob(emailTemplate, "notification.send");
+
+    sendEmailJob({type: "RESET_PASSWORD_SUCCESS", recipients: user.email}, "notification.send");
   } catch (error) {
     sendErrorResponse(
       res,

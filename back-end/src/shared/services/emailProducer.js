@@ -5,20 +5,18 @@ async function sendEmailJob(emailData, routingKey) {
     try {
         const connection = await getRabbitConnection();
         const channel = await connection.createChannel();
-        const exchange = "emailExchange";
+        const exchange = "notificationExchange";
 
         await channel.assertExchange(exchange, "direct", {
           durable: true,
         });
 
-        await channel.assertQueue("emailQueue", { durable: true });
-        await channel.assertQueue("notificationQueue", { durable: true });
-        await channel.bindQueue("emailQueue", exchange, "email.send");
-        await channel.bindQueue(
-          "notificationQueue",
-          exchange,
-          "notification.send"
-        );
+        // await channel.assertQueue("notificationQueue", { durable: true });
+        // await channel.bindQueue(
+        //   "notificationQueue",
+        //   exchange,
+        //   "notification.send"
+        // );
 
         channel.publish(
           exchange,

@@ -66,7 +66,15 @@ const makePayment = async (req, res) => {
   sendSuccessResponse(res, StatusCodes.CREATED, payment);
   // Send confirmation email
 
-  sendEmailJob({type: "PAYMENT_CONFIRMATION", recipients: bill.customerEmail, variables: { ...bill }}, "notification.send");
+  sendEmailJob(
+    {
+      type: "PAYMENT_CONFIRMATION",
+      recipients: bill.customerEmail,
+      variables: { ...bill },
+      generatePdf: true,
+    },
+    "notification.send"
+  );
 };
 
 module.exports = {

@@ -15,6 +15,7 @@ const emailTemplates = {
         </div>
       </div>
     `,
+    attachmentRequired: false,
   },
 
   SIGNUP_SUCCESS: {
@@ -28,6 +29,7 @@ const emailTemplates = {
         </div>
       </div>
     `,
+    attachmentRequired: false,
   },
 
   RESET_PASSWORD_SUCCESS: {
@@ -70,6 +72,7 @@ const emailTemplates = {
       </div>
     </div>
   `,
+    attachmentRequired: false
   },
 
   RESERVATION_CANCELLATION: {
@@ -85,6 +88,7 @@ const emailTemplates = {
         </div>
       </div>
     `,
+    attachmentRequired: false
   },
 
   PAYMENT_CONFIRMATION: {
@@ -100,6 +104,7 @@ const emailTemplates = {
         </div>
       </div>
     `,
+    attachmentRequired: true
   },
 };
 

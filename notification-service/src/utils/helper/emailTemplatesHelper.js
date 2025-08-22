@@ -12,6 +12,7 @@ function emailTemplatesHelper(templateName, templateData) {
     subject: template.subject.replace(/\{\{(\w+)\}\}/g, (_, key) => templateData[key] || ""),
     text: template.text.replace(/\{\{(\w+)\}\}/g, (_, key) => templateData[key] || ""),
     html: template.html.replace(/\{\{(\w+)\}\}/g, (_, key) => templateData[key] || ""),
+    attachmentRequired: template.attachmentRequired || false,
   };
 
   return populatedTemplate;

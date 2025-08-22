@@ -4,6 +4,8 @@ node_modules/
 # Environment variables
 .env
 
+test.js
+
 # Logs
 logs/
 *.log
@@ -32,3 +34,5 @@ coverage/
 
 # Local test output
 *.local
+
+/src/generated/prisma

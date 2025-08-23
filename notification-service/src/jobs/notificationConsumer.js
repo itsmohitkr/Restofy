@@ -55,10 +55,9 @@ async function startNotificationConsumer() {
                     console.log("Received notification data:", notificationPayload);
                     console.log("+-----------------------------------------------------------------+");
 
-                    // await processNotification(notificationPayload);
+                    await processNotification(notificationPayload);
 
-                    // channel.ack(msg); // Acknowledge the message
-                    throw new Error("Processing failed");
+                    channel.ack(msg); // Acknowledge the message
                 } catch (err) {
                     console.error("Failed to process notification job:", err);
                     // Option: nack and requeue for retry, or ack to drop

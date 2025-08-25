@@ -11,13 +11,6 @@ async function sendEmailJob(emailData, routingKey) {
           durable: true,
         });
 
-        // await channel.assertQueue("notificationQueue", { durable: true });
-        // await channel.bindQueue(
-        //   "notificationQueue",
-        //   exchange,
-        //   "notification.send"
-        // );
-
         channel.publish(
           exchange,
           routingKey,
@@ -26,13 +19,10 @@ async function sendEmailJob(emailData, routingKey) {
             persistent: true,
           }
         );
-        
         console.log("Email sent to queue:", emailData);
-    } catch (error) {
-        console.error("Error sending email to queue:", error);
-        throw new Error("Failed to send email to queue");
+    } catch (error) {      
+        console.error("Error sending email to queue:", error);   
     }
-  
 }
 
 module.exports = {

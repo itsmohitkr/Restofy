@@ -1,13 +1,13 @@
 const emailTemplates = {
   FORGOT_PASSWORD: {
     subject: "Password Reset Request",
-    text: `You requested a password reset. Please use the following link to reset your password: ${process.env.CLIENT_FRONTEND_URL}/api/auth/reset-password?token={{resetToken}}`,
+    text: `You requested a password reset. Please use the following link to reset your password: ${process.env.CLIENT_FRONTEND_URL}/auth/reset-password/{{resetToken}}`,
     html: `
       <div style="font-family: Arial, sans-serif; background: #f9f9f9; padding: 32px;">
         <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 24px;">
           <h2 style="color: #2d8cf0;">Password Reset Request</h2>
           <p>You requested a password reset. Please use the button below to reset your password:</p>
-          <a href="${process.env.CLIENT_FRONTEND_URL}/api/auth/reset-password?token={{resetToken}}" 
+          <a href="${process.env.CLIENT_FRONTEND_URL}/auth/reset-password/{{resetToken}}" 
              style="display: inline-block; margin: 16px 0; padding: 12px 24px; background: #2d8cf0; color: #fff; text-decoration: none; border-radius: 4px;">
             Reset Your Password
           </a>

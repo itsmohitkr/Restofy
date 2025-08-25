@@ -1,17 +1,19 @@
 const { startDLQConsumer } = require('./jobs/dlqConsumer');
 const { startNotificationConsumer } = require('./jobs/notificationConsumer');
 
-async function startAllConsumers() {
-    try {
-        await Promise.allSettled([
-            startNotificationConsumer(),
-            startDLQConsumer()
-        ]);
-        console.log("All consumers started successfully.");
 
-    } catch (error) {
-        console.error("Error starting consumers:", error);
+async function startAllConsumers() {
+    const results = await Promise.allSettled([
+        startNotificationConsumer(),
+        startDLQConsumer()
+    ]);
+
+    const failed = results.filter(r => r.status === 'rejected');
+    if (failed.length > 0) {
+        console.error("Error starting consumers:", failed.map(f => f.reason));
         process.exit(1);
+    } else {
+        console.log("All consumers started successfully.");
     }
 }
 

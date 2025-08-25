@@ -60,7 +60,7 @@ const signup = async (req, res, next) => {
     createdUser
   );
 
-  sendEmailJob({type:"SIGNUP_SUCCESS",recipients: createdUser.email}, "notification.send");
+  sendEmailJob({ type: "SIGNUP_SUCCESS", recipients: createdUser.email }, "notification.send");
 };
 
 const login = async (req, res, next) => {
@@ -131,8 +131,8 @@ const verifyToken = async (req, res, next) => {
       }
     }
     // If token is valid, attach user info to request
-    req.user = decoded;
-    next();
+    sendSuccessResponse(res, StatusCodes.OK, "Token is valid", { user: decoded });
+
   });
 };
 

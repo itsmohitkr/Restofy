@@ -20,7 +20,7 @@ function NewRestaurant() {
     restaurantAddress: "",
   });
     const [error, setError] = useState("");
-    const [restaurant, setRestaurant] = useState(null);
+    const [setRestaurant] = useState(null);
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {

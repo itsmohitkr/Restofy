@@ -17,7 +17,7 @@ import { RestaurantContext } from "../../Context/RestaurantContext";
 
 function SideBar() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { selectedRestaurant, setSelectedRestaurant } =
+  const { selectedRestaurant } =
     useContext(RestaurantContext);
 
   const handleListItemClick = (event, index) => {

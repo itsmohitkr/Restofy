@@ -21,7 +21,7 @@ import { RestaurantContext } from '../Context/RestaurantContext';
 
 
 function Layout() {
-  const { authState, setAuthState } = useContext(AuthContext);
+  const { setAuthState } = useContext(AuthContext);
     
 
   const handleLogout = async() => {

@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { RestaurantContext } from '../../Context/RestaurantContext';
+import Divider from '@mui/material/Divider';
 
 
 function Dashboard() {
@@ -46,8 +47,8 @@ function Dashboard() {
     <div>
       <Typography variant="h4" sx={{ mb: 2 }}>
         {selectedRestaurant ? selectedRestaurant.restaurantName : "Restaurants"}
-        
       </Typography>
+      <Divider sx={{ mb: 2 }} />
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
         {restaurants.map((restaurant) => (
           <Card

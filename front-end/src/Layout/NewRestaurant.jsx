@@ -32,7 +32,7 @@ function NewRestaurant() {
     e.preventDefault();
     // Simple validation
     if (!form.restaurantName || !form.restaurantEmail || !form.restaurantPhoneNumber || !form.restaurantLocation || !form.restaurantDescription || !form.restaurantAddress) {
-      setError("Name, Email, Phone Number, Location, Description, and Address are required.");
+      setError("all fields are required.");
       return;
     }
       setError("");

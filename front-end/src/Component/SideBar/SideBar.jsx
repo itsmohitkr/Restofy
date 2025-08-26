@@ -14,6 +14,7 @@ import ListItemText from "@mui/material/ListItemText";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { RestaurantContext } from "../../Context/RestaurantContext";
+import HotelIcon from "@mui/icons-material/Hotel";
 
 function SideBar() {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -46,7 +47,7 @@ function SideBar() {
             to="/new-restaurant"
           >
             <ListItemIcon>
-              <AddIcon />
+              <HotelIcon />
             </ListItemIcon>
             <ListItemText primary="New Restaurant" />
           </ListItemButton>

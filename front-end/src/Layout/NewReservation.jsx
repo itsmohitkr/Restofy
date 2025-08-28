@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
 import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -32,7 +31,6 @@ function NewReservation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simple validation
     if (
       !form.firstName ||
       !form.lastName ||
@@ -52,15 +50,13 @@ function NewReservation() {
     }
     setError("");
     try {
-      // Convert reservationTime to ISO string with timezone (UTC)
       const reservationTimeISO = new Date(form.reservationTime).toISOString();
-
       const reservationData = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations`,
         {
           ...form,
           numberOfGuests: Number(form.numberOfGuests),
-          reservationTime: reservationTimeISO, // use ISO string
+          reservationTime: reservationTimeISO,
         },
         {
           headers: {
@@ -96,28 +92,16 @@ function NewReservation() {
     navigate(-1);
   };
 
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        margin: "0 auto",
-      }}
-    >
-      <Card
-        sx={{
-          p: 4,
-          maxWidth: 520,
-          width: "100%",
-          boxShadow: 6,
-          borderRadius: 3,
-          bgcolor: "#f5f5f5d7",
-        }}
-      >
+    return (
+      <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, border: '1px solid #ddd', p: 3, borderRadius: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>
+          {selectedRestaurant
+            ? `For: ${selectedRestaurant.restaurantName}`
+            : "No restaurant selected"}
+        </Typography>
         <Typography
-          variant="h4"
-          align="center"
+          variant="h5"
+          align="left"
           gutterBottom
           fontWeight={700}
           color="primary.main"
@@ -125,75 +109,82 @@ function NewReservation() {
           New Reservation
         </Typography>
         <Divider sx={{ mb: 2 }} />
+
         <Box
           component="form"
           onSubmit={handleSubmit}
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
-          <TextField
-            name="firstName"
-            label="First Name"
-            placeholder="First Name"
-            required
-            fullWidth
-            size="small"
-            value={form.firstName}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="lastName"
-            label="Last Name"
-            placeholder="Last Name"
-            required
-            fullWidth
-            size="small"
-            value={form.lastName}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="Email"
-            required
-            fullWidth
-            size="small"
-            value={form.email}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="contact"
-            label="Contact Number"
-            placeholder="Contact Number"
-            required
-            fullWidth
-            size="small"
-            value={form.contact}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="numberOfGuests"
-            label="Number of Guests"
-            placeholder="Number of Guests"
-            required
-            fullWidth
-            size="small"
-            type="number"
-            inputProps={{ min: 1 }}
-            value={form.numberOfGuests}
-            onChange={handleInputChange}
-          />
-          <TextField
-            name="reservationTime"
-            label="Reservation Time"
-            type="datetime-local"
-            required
-            fullWidth
-            size="small"
-            InputLabelProps={{ shrink: true }}
-            value={form.reservationTime}
-            onChange={handleInputChange}
-          />
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              name="firstName"
+              label="First Name"
+              placeholder="First Name"
+              required
+              fullWidth
+              size="small"
+              value={form.firstName}
+              onChange={handleInputChange}
+            />
+            <TextField
+              name="lastName"
+              label="Last Name"
+              placeholder="Last Name"
+              required
+              fullWidth
+              size="small"
+              value={form.lastName}
+              onChange={handleInputChange}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              name="email"
+              type="email"
+              label="Email"
+              placeholder="Email"
+              required
+              fullWidth
+              size="small"
+              value={form.email}
+              onChange={handleInputChange}
+            />
+            <TextField
+              name="contact"
+              label="Contact Number"
+              placeholder="Contact Number"
+              required
+              fullWidth
+              size="small"
+              value={form.contact}
+              onChange={handleInputChange}
+            />
+          </Stack>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              name="numberOfGuests"
+              label="Number of Guests"
+              placeholder="Number of Guests"
+              required
+              fullWidth
+              size="small"
+              type="number"
+              inputProps={{ min: 1 }}
+              value={form.numberOfGuests}
+              onChange={handleInputChange}
+            />
+            <TextField
+              name="reservationTime"
+              label="Reservation Time"
+              type="datetime-local"
+              required
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={form.reservationTime}
+              onChange={handleInputChange}
+            />
+          </Stack>
           <TextField
             name="specialRequests"
             label="Special Requests"
@@ -239,9 +230,8 @@ function NewReservation() {
             </Button>
           </Stack>
         </Box>
-      </Card>
-    </Box>
-  );
+      </Box>
+    );
 }
 
 export default NewReservation;

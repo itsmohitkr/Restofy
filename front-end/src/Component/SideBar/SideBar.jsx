@@ -39,18 +39,41 @@ function SideBar() {
           <ListItemText primary="Dashboard" />
         </ListItemButton>
 
-     
-          <ListItemButton
-            selected={selectedIndex === 2}
-            onClick={(event) => handleListItemClick(event, 2)}
-            component={Link}
-            to="/new-restaurant"
-          >
-            <ListItemIcon>
-              <HotelIcon />
-            </ListItemIcon>
-            <ListItemText primary="New Restaurant" />
-          </ListItemButton>
+        <ListItemButton
+          selected={selectedIndex === 2}
+          onClick={(event) => handleListItemClick(event, 2)}
+          component={Link}
+          to="/new-restaurant"
+        >
+          <ListItemIcon>
+            <AddIcon />
+          </ListItemIcon>
+          <ListItemText primary="New Restaurant" />
+        </ListItemButton>
+
+        <ListItemButton
+          selected={selectedIndex === 7}
+          onClick={(event) => handleListItemClick(event, 7)}
+          component={Link}
+          to="/restaurant"
+        >
+          <ListItemIcon>
+            <HotelIcon />
+          </ListItemIcon>
+          <ListItemText primary="Restaurant" />
+        </ListItemButton>
+
+        <ListItemButton
+          selected={selectedIndex === 8}
+          onClick={(event) => handleListItemClick(event, 8)}
+          component={Link}
+          to="/tables"
+        >
+          <ListItemIcon>
+            <HotelIcon />
+          </ListItemIcon>
+          <ListItemText primary="Tables" />
+        </ListItemButton>
 
         {selectedRestaurant && (
           <>

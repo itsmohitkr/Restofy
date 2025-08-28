@@ -1,10 +1,11 @@
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { RestaurantContext } from "../Context/RestaurantContext";
 import TableForm from "./TableForm";
+import { RestaurantContext } from "../Context/RestaurantContext";
 
-function NewTable() {
+function EditTable() {
+  const { tableId } = useParams();
   const [form, setForm] = useState({
     tableName: "",
     tableCapacity: "",
@@ -15,6 +16,28 @@ function NewTable() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { selectedRestaurant } = useContext(RestaurantContext);
+
+  useEffect(() => {
+    const fetchTable = async () => {
+      if (!selectedRestaurant) return;
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table/${tableId}`,
+          { withCredentials: true }
+        );
+        if (res.data && res.data.data) {
+          setForm({
+            tableName: res.data.data.tableName || "",
+            tableCapacity: res.data.data.tableCapacity?.toString() || "",
+            tableType: res.data.data.tableType || "Regular",
+          });
+        }
+      } catch (err) {
+        setError("Failed to fetch table details.");
+      }
+    };
+    fetchTable();
+  }, [selectedRestaurant, tableId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,12 +62,11 @@ function NewTable() {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table`,
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table/${tableId}`,
         {
           ...form,
           tableCapacity: Number(form.tableCapacity),
-          tableStatus: "Available",
         },
         {
           headers: {
@@ -53,20 +75,15 @@ function NewTable() {
           withCredentials: true,
         }
       );
-      if (res.status === 201) {
-        setSuccess("Table created successfully!");
-        setForm({
-          tableName: "",
-          tableCapacity: "",
-          tableType: "Regular",
-        });
+      if (res.status === 200) {
+        setSuccess("Table updated successfully!");
         setTimeout(() => navigate("/tables"), 1000);
       }
     } catch (err) {
       if (err.response && err.response.status === 400) {
         setError(err.response.data?.message || "Invalid data provided.");
       } else {
-        setError("Failed to create table.");
+        setError("Failed to update table.");
       }
       setSuccess("");
     }
@@ -85,10 +102,10 @@ function NewTable() {
       onChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      submitLabel="Create Table"
+      submitLabel="Update Table"
       isSubmitting={isSubmitting}
     />
   );
 }
 
-export default NewTable;
+export default EditTable;

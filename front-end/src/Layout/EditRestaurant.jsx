@@ -1,9 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import RestaurantForm from "./RestaurantForm";
+import { RestaurantContext } from "../Context/RestaurantContext";
 
-function NewRestaurant() {
+function EditRestaurant() {
+  const { restaurantId } = useParams();
   const [form, setForm] = useState({
     restaurantName: "",
     restaurantLocation: "",
@@ -15,6 +17,32 @@ function NewRestaurant() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { selectedRestaurant } = useContext(RestaurantContext);
+
+  useEffect(() => {
+    // Fetch restaurant details for editing
+    const fetchRestaurant = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurantId}`,
+          { withCredentials: true }
+        );
+        if (res.data && res.data.data) {
+          setForm({
+            restaurantName: res.data.data.restaurantName || "",
+            restaurantLocation: res.data.data.restaurantLocation || "",
+            restaurantEmail: res.data.data.restaurantEmail || "",
+            restaurantPhoneNumber: res.data.data.restaurantPhoneNumber || "",
+            restaurantDescription: res.data.data.restaurantDescription || "",
+            restaurantAddress: res.data.data.restaurantAddress || "",
+          });
+        }
+      } catch (err) {
+        setError("Failed to fetch restaurant details.");
+      }
+    };
+    fetchRestaurant();
+  }, [restaurantId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,8 +65,8 @@ function NewRestaurant() {
     setError("");
     setIsSubmitting(true);
     try {
-      const restaurantData = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants`,
+      const restaurantData = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurantId}`,
         form,
         {
           headers: {
@@ -47,14 +75,14 @@ function NewRestaurant() {
           withCredentials: true,
         }
       );
-      if (restaurantData.status === 201) {
+      if (restaurantData.status === 200) {
         navigate("/restaurant");
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
         setError(error.response.data?.message || "Invalid data provided.");
       } else {
-        setError("Failed to register restaurant.");
+        setError("Failed to update restaurant.");
       }
     }
     setIsSubmitting(false);
@@ -71,10 +99,10 @@ function NewRestaurant() {
       onChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      submitLabel="Register"
+      submitLabel="Update"
       isSubmitting={isSubmitting}
     />
   );
 }
 
-export default NewRestaurant;
+export default EditRestaurant;

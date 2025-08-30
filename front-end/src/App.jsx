@@ -22,6 +22,9 @@ const Tables = lazy(() => import("./Layout/Tables"));
 const EditRestaurant = lazy(() => import("./Layout/EditRestaurant"));
 const EditTable = lazy(() => import("./Layout/EditTable"));
 const ManageReservation = lazy(() => import("./Layout/ManageReservation"));
+const EditReservation = lazy(() => import("./Layout/EditReservation"));
+const NewMenuItem = lazy(() => import("./Layout/NewMenuItem"));
+const EditMenuItem = lazy(() => import("./Layout/EditMenuItem"));
 
 const NotFound = () => (
   <Box sx={{ p: 4, textAlign: "center" }}>
@@ -84,16 +87,26 @@ function App() {
           <Route path="new-restaurant" element={<NewRestaurant />} />
           <Route path="new-reservation" element={<NewReservation />} />
           <Route path="reservations" element={<Reservation />} />
-          <Route path="reservations/:reservationId/manage" element={<ManageReservation />} />
+          <Route
+            path="reservations/:reservationId/manage"
+            element={<ManageReservation />}
+          />
+          <Route
+            path="reservations/:reservationId/manage/edit"
+            element={<EditReservation />}
+          />
           <Route path="restaurant" element={<Restaurant />} />
-          <Route path="edit-restaurant/:restaurantId" element={<EditRestaurant />} />
+          <Route
+            path="edit-restaurant/:restaurantId"
+            element={<EditRestaurant />}
+          />
           <Route path="menu-items" element={<MenuItems />} />
+          <Route path="menu-items/new" element={<NewMenuItem />} />
+          <Route path="menu-items/edit/:menuItemId" element={<EditMenuItem />} />
           <Route path="new-table" element={<NewTable />} />
           <Route path="tables" element={<Tables />} />
           <Route path="edit-table/:tableId" element={<EditTable />} />
         </Route>
-
-        {/* Catch-all route for 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

@@ -89,6 +89,7 @@ function Restaurant() {
     } catch (error) {
       setOpenDialog(false);
       setRestaurantToDelete(null);
+      console.log(error);
     }
   };
 

@@ -56,7 +56,8 @@ function ManageReservation() {
         );
         setReservation(res.data.data);
       } catch (err) {
-        setReservation(null);
+          setReservation(null);
+          console.log(err);
       }
       setLoading(false);
     };
@@ -78,7 +79,8 @@ function ManageReservation() {
             )
           );
         } catch (err) {
-          setAvailableTables([]);
+            setAvailableTables([]);
+            console.log(err);
         }
         setLoadingTables(false);
       };
@@ -104,16 +106,17 @@ function ManageReservation() {
       setReservation((prev) => ({
         ...prev,
         tableId: selectedTableId,
-        status: "Assigned",
+        status: "Seated",
       }));
+        navigate("/reservations");
     } catch (err) {
       setAssignError("Failed to assign table.");
-      setAssignSuccess("");
+        setAssignSuccess("");
+        console.log(err);
     }
     setActionLoading(false);
   };
 
-  // Show confirmation dialog before cancelling
   const handleCancelReservation = async () => {
     setActionLoading(true);
     try {
@@ -123,12 +126,14 @@ function ManageReservation() {
         { withCredentials: true }
       );
       setReservation((prev) => ({ ...prev, status: "Cancelled" }));
-    } catch (err) {}
+    } catch (err) {
+        console.log(err);
+    }
     setActionLoading(false);
-    setOpenCancelDialog(false);
+      setOpenCancelDialog(false);
+      
   };
 
-  // Show confirmation dialog before deleting
   const handleDeleteReservation = async () => {
     setActionLoading(true);
     try {
@@ -137,16 +142,17 @@ function ManageReservation() {
         { withCredentials: true }
       );
       navigate("/reservations");
-    } catch (err) {}
+    } catch (err) {
+        console.log(err);
+    }
     setActionLoading(false);
     setOpenDeleteDialog(false);
   };
 
   const handleEditReservation = () => {
-    alert("Edit reservation feature not implemented.");
+    navigate(`/reservations/${reservation.id}/manage/edit`);
   };
 
-  // If loading or reservation not found
   if (loading) {
     return (
       <Box sx={{ p: 4, textAlign: "center" }}>
@@ -158,7 +164,11 @@ function ManageReservation() {
     return (
       <Box sx={{ p: 4, textAlign: "center" }}>
         <Typography color="error">Reservation not found.</Typography>
-        <Button variant="outlined" onClick={() => navigate("/reservations")}>
+        <Button
+          variant="outlined"
+          onClick={() => navigate("/reservations")}
+          sx={{ textTransform: "none", fontWeight: 600 }}
+        >
           Back to Reservations
         </Button>
       </Box>
@@ -185,7 +195,9 @@ function ManageReservation() {
           <Card variant="outlined" sx={{ mb: 2, p: 0 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                <AssignmentTurnedInIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+                <AssignmentTurnedInIcon
+                  sx={{ mr: 1, verticalAlign: "middle" }}
+                />
                 Reservation Details
               </Typography>
               <Divider sx={{ mb: 2 }} />
@@ -240,13 +252,14 @@ function ManageReservation() {
               </Stack>
             </CardContent>
           </Card>
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: "wrap", justifyContent: "space-around" }}>
             <Button
               variant="outlined"
               color="primary"
               startIcon={<EditIcon />}
               onClick={handleEditReservation}
               disabled={actionLoading}
+              sx={{ textTransform: "none", fontWeight: 600 }}
             >
               Edit
             </Button>
@@ -255,7 +268,8 @@ function ManageReservation() {
               color="warning"
               startIcon={<CancelIcon />}
               onClick={() => setOpenCancelDialog(true)}
-              disabled={reservation.status === "Cancelled" || actionLoading}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+              disabled={reservation.status === "Cancelled" || reservation.status === "Seated" || actionLoading}
             >
               Cancel
             </Button>
@@ -264,6 +278,7 @@ function ManageReservation() {
               color="error"
               startIcon={<DeleteIcon />}
               onClick={() => setOpenDeleteDialog(true)}
+              sx={{ textTransform: "none", fontWeight: 600 }}
               disabled={actionLoading}
             >
               Delete
@@ -273,7 +288,12 @@ function ManageReservation() {
               color="success"
               startIcon={<AssignmentTurnedInIcon />}
               onClick={() => setAssignMode(true)}
-              disabled={reservation.status === "Cancelled" || assignMode}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+              disabled={
+                reservation.status === "Cancelled" ||
+                reservation.status === "Seated" ||
+                assignMode
+              }
             >
               Assign Table
             </Button>
@@ -298,6 +318,7 @@ function ManageReservation() {
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Assign Table
               </Typography>
+              <Divider sx={{ mb: 2 }} />
               {loadingTables ? (
                 <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
                   <CircularProgress />
@@ -307,42 +328,97 @@ function ManageReservation() {
                   No available tables found.
                 </Typography>
               ) : (
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                  {availableTables.map((table) => (
-                    <Card
-                      key={table.id}
-                      variant="outlined"
-                      sx={{
-                        minWidth: 160,
-                        mb: 2,
-                        borderColor:
-                          selectedTableId === table.id ? "primary.main" : "grey.300",
-                        borderWidth: selectedTableId === table.id ? 2 : 1,
-                        cursor: "pointer",
-                        boxShadow:
-                          selectedTableId === table.id ? 2 : 0,
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                      }}
-                      onClick={() => setSelectedTableId(table.id)}
-                    >
-                      <CardContent>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          <TableRestaurantIcon fontSize="small" sx={{ mr: 1, verticalAlign: "middle" }} />
-                          {table.tableName}
-                        </Typography>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="body2">
-                          <GroupIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: "middle" }} />
-                          Capacity: {table.tableCapacity}
-                        </Typography>
-                        <Typography variant="body2">
-                          <InfoIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: "middle" }} />
-                          Type: {table.tableType}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Stack>
+                <Box
+                  sx={{
+                    maxHeight: 560,
+                    overflowY: "auto",
+                    pr: 1,
+                  }}
+                >
+                  <Stack spacing={2}>
+                    {availableTables.map((table) => {
+                      const isSelected = selectedTableId === table.id;
+                      return (
+                        <Card
+                          key={table.id}
+                          variant="outlined"
+                          sx={{
+                            borderColor: isSelected ? "primary.main" : "grey.300",
+                            borderWidth: isSelected ? 2 : 1,
+                            borderRadius: 2,
+                            boxShadow: isSelected ? 2 : 0,
+                            backgroundColor: isSelected ? "action.hover" : "background.paper",
+                            cursor: "pointer",
+                            transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
+                            p: 2,
+                            position: "relative",
+                            minWidth: 220,
+                          }}
+                          onClick={() => setSelectedTableId(table.id)}
+                        >
+                          {/* Top Row */}
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                            {/* Top Left: Table Name */}
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                              <TableRestaurantIcon fontSize="small" />
+                              <Typography variant="subtitle1" fontWeight={600}>
+                                {table.tableName}
+                              </Typography>
+                            </Box>
+                            {/* Top Right: Table Type */}
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {table.tableType}
+                            </Typography>
+                          </Box>
+                          {/* Middle: Capacity */}
+                          <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
+                            <GroupIcon fontSize="small" sx={{ mr: 0.5 }} />
+                            <Typography variant="body2">
+                              Capacity: {table.tableCapacity}
+                            </Typography>
+                          </Box>
+                          {/* Bottom Row */}
+                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mt: 2 }}>
+                            {/* Bottom Left: Table Name (optional) */}
+                            <Typography variant="caption" color="text.secondary">
+                              {table.tableName}
+                            </Typography>
+                            {/* Bottom Right: Buttons (only if selected) */}
+                            {isSelected && (
+                              <Stack direction="row" spacing={1}>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setSelectedTableId("");
+                                    setAssignError("");
+                                    setAssignSuccess("");
+                                  }}
+                                  disabled={assignSuccess}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  variant="contained"
+                                  color="primary"
+                                  size="small"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    handleAssignTable();
+                                  }}
+                                  disabled={!selectedTableId || assignSuccess || actionLoading}
+                                >
+                                  Confirm
+                                </Button>
+                              </Stack>
+                            )}
+                          </Box>
+                        </Card>
+                      );
+                    })}
+                  </Stack>
+                </Box>
               )}
               {assignError && (
                 <Typography color="error" variant="body2" sx={{ mb: 1 }}>
@@ -354,28 +430,6 @@ function ManageReservation() {
                   {assignSuccess}
                 </Typography>
               )}
-              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    setAssignMode(false);
-                    setSelectedTableId("");
-                    setAssignError("");
-                    setAssignSuccess("");
-                  }}
-                  disabled={assignSuccess}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAssignTable}
-                  disabled={!selectedTableId || assignSuccess || actionLoading}
-                >
-                  Confirm Assignment
-                </Button>
-              </Stack>
             </Box>
           )}
         </Box>
@@ -389,11 +443,16 @@ function ManageReservation() {
         <DialogTitle>Cancel Reservation</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to cancel this reservation? This action cannot be undone.
+            Are you sure you want to cancel this reservation? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCancelDialog(false)} color="primary" variant="outlined">
+          <Button
+            onClick={() => setOpenCancelDialog(false)}
+            color="primary"
+            variant="outlined"
+          >
             No
           </Button>
           <Button
@@ -415,11 +474,16 @@ function ManageReservation() {
         <DialogTitle>Delete Reservation</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this reservation? This action cannot be undone.
+            Are you sure you want to delete this reservation? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)} color="primary" variant="outlined">
+          <Button
+            onClick={() => setOpenDeleteDialog(false)}
+            color="primary"
+            variant="outlined"
+          >
             No
           </Button>
           <Button

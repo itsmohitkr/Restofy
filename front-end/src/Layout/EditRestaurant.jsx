@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import RestaurantForm from "./RestaurantForm";
@@ -17,7 +17,6 @@ function EditRestaurant() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { selectedRestaurant } = useContext(RestaurantContext);
 
   useEffect(() => {
     // Fetch restaurant details for editing
@@ -38,7 +37,8 @@ function EditRestaurant() {
           });
         }
       } catch (err) {
-        setError("Failed to fetch restaurant details.");
+          setError("Failed to fetch restaurant details.");
+          console.log(err);
       }
     };
     fetchRestaurant();

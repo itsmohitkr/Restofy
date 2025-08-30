@@ -33,7 +33,8 @@ function Reservation() {
         );
         setReservations(res.data.data || []);
       } catch (err) {
-        setReservations([]);
+          setReservations([]);
+          console.log(err);
       }
     };
     fetchReservations();

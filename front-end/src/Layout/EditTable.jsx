@@ -33,7 +33,8 @@ function EditTable() {
           });
         }
       } catch (err) {
-        setError("Failed to fetch table details.");
+          setError("Failed to fetch table details.");
+          console.log(err);
       }
     };
     fetchTable();

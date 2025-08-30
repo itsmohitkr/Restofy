@@ -60,6 +60,7 @@ function Tables() {
         setTables(res.data.data || []);
       } catch (err) {
         setTables([]);
+        console.log(err);
       }
       setLoading(false);
     };
@@ -110,15 +111,21 @@ function Tables() {
           variant="outlined"
           onClick={() => navigate("/new-table")}
           size="small"
-          sx={{ fontWeight: 600 }}
+          sx={{ fontWeight: 600, textTransform: "none" }}
         >
           + New Table
         </Button>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
-      <TableContainer component={Paper} sx={{ mt: 2}}>
-        <Table>
+      <TableContainer
+        component={Paper}
+        sx={{
+          mt: 2,
+          maxHeight: 580,
+        }}
+      >
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell>

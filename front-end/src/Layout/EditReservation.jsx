@@ -1,10 +1,11 @@
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import ReservationForm from "./ReservationForm";
 
-function NewReservation() {
+function EditReservation() {
+  const { reservationId } = useParams();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -19,6 +20,38 @@ function NewReservation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { selectedRestaurant } = useContext(RestaurantContext);
+
+  useEffect(() => {
+    const fetchReservation = async () => {
+      if (!selectedRestaurant) return;
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}`,
+          { withCredentials: true }
+        );
+        if (res.data && res.data.data) {
+            const r = res.data.data;
+            console.log(r);
+            
+          setForm({
+            firstName: r.firstName || "",
+            lastName: r.lastName || "",
+            email: r.email || "",
+            contact: r.contact || "",
+            numberOfGuests: r.numberOfGuests?.toString() || "",
+            specialRequests: r.specialRequests || "",
+            reservationTime: r.reservationTime
+              ? r.reservationTime.slice(0, 16)
+              : "",
+          });
+        }
+      } catch (err) {
+          setError("Failed to fetch reservation details.");
+          console.log(err);
+      }
+    };
+    fetchReservation();
+  }, [selectedRestaurant, reservationId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -48,8 +81,8 @@ function NewReservation() {
     setIsSubmitting(true);
     try {
       const reservationTimeISO = new Date(form.reservationTime).toISOString();
-      const reservationData = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations`,
+      const reservationData = await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}`,
         {
           ...form,
           numberOfGuests: Number(form.numberOfGuests),
@@ -62,24 +95,15 @@ function NewReservation() {
           withCredentials: true,
         }
       );
-      if (reservationData.status === 201) {
-        setSuccess("Reservation created successfully!");
-        setForm({
-          firstName: "",
-          lastName: "",
-          email: "",
-          contact: "",
-          numberOfGuests: "",
-          specialRequests: "",
-          reservationTime: "",
-        });
+      if (reservationData.status === 200) {
+        setSuccess("Reservation updated successfully!");
         setTimeout(() => navigate("/reservations"), 1200);
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
         setError(error.response.data?.message || "Invalid data provided.");
       } else {
-        setError("Failed to create reservation.");
+        setError("Failed to update reservation.");
       }
       setSuccess("");
     }
@@ -98,11 +122,11 @@ function NewReservation() {
       onChange={handleInputChange}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
-      submitLabel="Reserve"
+      submitLabel="Update"
       selectedRestaurant={selectedRestaurant}
       isSubmitting={isSubmitting}
     />
   );
 }
 
-export default NewReservation;
+export default EditReservation;

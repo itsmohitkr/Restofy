@@ -13,6 +13,7 @@ router
 
 router
   .route("/")
+  .get(requirePermission(PERMISSIONS.CAN_VIEW_MENU), controller.getMenuForRestaurant)
   .post(requirePermission(PERMISSIONS.CAN_CREATE_MENU), controller.createMenu)
   .all(methodNotAllowed);
 

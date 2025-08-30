@@ -2,15 +2,17 @@ const service = require("./menu.service");
 const { StatusCodes } = require("http-status-codes");
 const { successResponse } = require("../../utils/helper/responseBody");
 const asyncErrorBoundary = require("../../shared/error/asyncErrorBoundary");
-const { sendSuccessResponse, sendErrorResponse } = require("../../utils/helper/responseHelpers");
+const {
+  sendSuccessResponse,
+  sendErrorResponse,
+} = require("../../utils/helper/responseHelpers");
 const { validateParam } = require("../../shared/middleware/validateParam");
 
 // url: /restaurant/:restaurantId/menu
 const createMenu = async (req, res) => {
-  
   const menuData = {
     restaurantId: req.restaurantId,
-  };  
+  };
   const isMenuExists = await service.getMenuByRestaurantId(req.restaurantId);
   if (isMenuExists) {
     return sendErrorResponse(
@@ -31,22 +33,13 @@ const createMenu = async (req, res) => {
 
 const getMenu = async (req, res) => {
   const menu = res.locals.menu;
-  sendSuccessResponse(
-    res,
-    StatusCodes.OK,
-    "Menu retrieved successfully",
-    menu
-  );
+  sendSuccessResponse(res, StatusCodes.OK, "Menu retrieved successfully", menu);
 };
 
 const deleteMenu = async (req, res) => {
   const menu = res.locals.menu;
   await service.deleteMenu(menu.id);
-  sendSuccessResponse(
-    res,
-    StatusCodes.NO_CONTENT,
-    "Menu deleted successfully"
-  );
+  sendSuccessResponse(res, StatusCodes.NO_CONTENT, "Menu deleted successfully");
 };
 const isMenuExists = async (req, res, next) => {
   const { menuId } = req.params;
@@ -62,9 +55,30 @@ const isMenuExists = async (req, res, next) => {
   res.locals.menu = menu;
   next();
 };
+const getMenuForRestaurant = async (req, res) => {
+  const { restaurantId } = req.params;
+  const menu = await service.getMenuByRestaurantId(restaurantId);
+  if (!menu) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.NOT_FOUND,
+      `Menu not found for the given Restaurant ID: ${restaurantId}`,
+      "Not Found"
+    );
+  }
+  sendSuccessResponse(res, StatusCodes.OK, "Menu retrieved successfully", menu);
+};
 module.exports = {
   createMenu: asyncErrorBoundary(createMenu),
-  getMenu: [validateParam("menuId"),isMenuExists, asyncErrorBoundary(getMenu)],
-  deleteMenu: [validateParam("menuId"), isMenuExists, asyncErrorBoundary(deleteMenu)],
+  getMenu: [validateParam("menuId"), isMenuExists, asyncErrorBoundary(getMenu)],
+  deleteMenu: [
+    validateParam("menuId"),
+    isMenuExists,
+    asyncErrorBoundary(deleteMenu),
+  ],
   isMenuExists: asyncErrorBoundary(isMenuExists),
+  getMenuForRestaurant: [
+    validateParam("restaurantId"),
+    asyncErrorBoundary(getMenuForRestaurant),
+  ],
 };

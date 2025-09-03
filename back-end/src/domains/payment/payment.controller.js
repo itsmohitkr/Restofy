@@ -17,11 +17,11 @@ const makePayment = async (req, res) => {
   const { bill } = res.locals;
   const { order } = res.locals;
 
-  if (!order || order.status !== "Finalized") {
+  if (!order || order.status !== "Billed") {
     return sendErrorResponse(
       res,
       StatusCodes.BAD_REQUEST,
-      "Payment can only be made for finalized orders",
+      "Payment can only be made for billed orders",
       "Invalid Order Status"
     );
   }

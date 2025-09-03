@@ -12,6 +12,10 @@ router
 router
   .route("/")
   .post(requirePermission(PERMISSIONS.CAN_CREATE_BILL), controller.createBill)
+  .get(
+    requirePermission(PERMISSIONS.CAN_VIEW_BILL),
+    controller.getBillByOrderId
+  )
   .all(methodNotAllowed);
 
 module.exports = router;

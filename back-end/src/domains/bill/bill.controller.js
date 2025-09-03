@@ -131,6 +131,12 @@ const isBillAlreatExist = async (req, res, next) => {
   next();
 };
 
+const getBillByOrderId = async (req, res) => {
+  const { order } = res.locals;
+  const bill = await service.getBillByOrderId(order.id);
+  sendSuccessResponse(res, StatusCodes.OK, "Bill retrieved successfully", bill);
+};
+
 module.exports = {
   createBill: [isOrderExist, isBillAlreatExist, asyncErrorBoundary(createBill)],
   getBill: [
@@ -140,4 +146,5 @@ module.exports = {
     asyncErrorBoundary(getBill),
   ],
   isBillExist: [isOrderExist, validateParam("billId"), isBillExist],
+  getBillByOrderId: [isOrderExist, asyncErrorBoundary(getBillByOrderId)],
 };

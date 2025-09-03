@@ -94,6 +94,9 @@ async function completeOrder(orderId, restaurantId) {
     data: {
       status: "Finalized",
     },
+    include: {
+      orderItems: true,
+    },
   });
 }
 async function getOpenOrderByReservationId(reservationId, restaurantId) {
@@ -102,6 +105,17 @@ async function getOpenOrderByReservationId(reservationId, restaurantId) {
       reservationId: parseInt(reservationId),
       restaurantId: parseInt(restaurantId),
       status: "Open",
+    },
+    include: {
+      orderItems: true,
+    },
+  });
+}
+async function getOrderByReservationId(reservationId, restaurantId) {
+  return prisma.order.findMany({
+    where: {
+      reservationId: parseInt(reservationId),
+      restaurantId: parseInt(restaurantId),
     },
     include: {
       orderItems: true,
@@ -119,4 +133,5 @@ module.exports = {
   getOrderById,
   completeOrder,
   getOpenOrderByReservationId,
+  getOrderByReservationId,
 };

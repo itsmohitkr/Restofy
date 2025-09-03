@@ -21,6 +21,12 @@ const createBill = async (billData, billItems) => {
       },
     });
 
+    // update order status
+    await prisma.order.update({
+      where: { id: bill.orderId },
+      data: { status: "Billed" },
+    });
+
     // Create the bill items
     const billItemsData = billItems.map((item) => ({
       ...item,
@@ -62,9 +68,18 @@ const getBillByOrderIdAndReservationId = async (reservationId, orderId) => {
   });
 };
 
+async function getBillByOrderId(orderId) {
+  return prisma.bill.findFirst({
+    where: {
+      orderId: Number(orderId),
+    },
+  });
+}
+
 module.exports = {
   getMenuItemById,
   createBill,
   getBillById,
-  getBillByOrderIdAndReservationId
+  getBillByOrderIdAndReservationId,
+  getBillByOrderId,
 };

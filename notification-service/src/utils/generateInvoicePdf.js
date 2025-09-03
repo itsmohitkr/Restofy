@@ -1,6 +1,8 @@
 
 
 async function generateInvoice(bill) {
+  console.log(bill);
+  
   const PDFDocument = require("pdfkit");
   const doc = new PDFDocument({ margin: 40 });
   let buffers = [];
@@ -67,8 +69,8 @@ async function generateInvoice(bill) {
     doc.font("Helvetica");
     let y = tableTop + rowHeight;
 
-    if (Array.isArray(bill.items) && bill.items.length > 0) {
-      bill.items.forEach((item) => {
+    if (Array.isArray(bill.billItems) && bill.billItems.length > 0) {
+      bill.billItems.forEach((item) => {
         doc.text(item.itemName, itemX, y);
         doc.text(item.quantity.toString(), qtyX, y);
         doc.text(`${item.price}`, priceX, y);

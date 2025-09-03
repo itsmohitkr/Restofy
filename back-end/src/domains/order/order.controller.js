@@ -230,7 +230,7 @@ const completeOrder = async (req, res) => {
   );
 };
 
-const isOpenOrder= async (req, res, next) => {
+const isOpenOrder = async (req, res, next) => {
   const { reservationId, restaurantId } = req.params;
   const order = await service.getOpenOrderByReservationId(
     reservationId,
@@ -247,8 +247,25 @@ const isOpenOrder= async (req, res, next) => {
   next();
 };
 
+const getAllOrders = async (req, res) => {
+  const { reservationId, restaurantId } = req.params;
+  const orders = await service.getOrderByReservationId(
+    reservationId,
+    restaurantId
+  );
+  if (!orders || orders.length === 0) {
+    return sendErrorResponse(
+      res,
+      StatusCodes.NOT_FOUND,
+      `No orders found for reservation ID ${reservationId} in restaurant ID ${restaurantId}`,
+      "Orders Not Found"
+    );
+  }
+  sendSuccessResponse(res, StatusCodes.OK, "Orders retrieved successfully", orders);
+};
+
 module.exports = {
-  createOrder: [isOpenOrder,asyncErrorBoundary(createOrder)],
+  createOrder: [isOpenOrder, asyncErrorBoundary(createOrder)],
   getOrder: [
     validateParam("orderId"),
     isOrderExist,
@@ -258,12 +275,13 @@ module.exports = {
     validateParam("orderId"),
     isOrderExist,
     asyncErrorBoundary(updateOrder),
-    ],
+  ],
   completeOrder: [
     validateParam("orderId"),
-      isOrderExist,
-    asyncErrorBoundary(completeOrder)],
-    
-    isOrderExist: [validateParam("orderId"), isOrderExist],
-  
+    isOrderExist,
+    asyncErrorBoundary(completeOrder),
+  ],
+
+  isOrderExist: [validateParam("orderId"), isOrderExist],
+  getAllOrders: [validateParam("reservationId"), getAllOrders]
 };

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import ReservationForm from "./ReservationForm";
 
 function EditReservation() {
   const { reservationId } = useParams();
+        const { reservation, setReservation } = useOutletContext();
+
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -97,7 +99,15 @@ function EditReservation() {
       );
       if (reservationData.status === 200) {
         setSuccess("Reservation updated successfully!");
-        setTimeout(() => navigate("/reservations"), 1200);
+        setTimeout(
+          () => navigate(`/reservations/${reservationId}/manage`),
+          500
+        );
+
+        setReservation({
+          ...reservation,
+          ...form,
+        });
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {

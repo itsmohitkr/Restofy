@@ -185,6 +185,7 @@ model MenuItem {
 enum OrderStatus {
   Open
   Finalized
+  Billed
   Cancelled
   Paid
 }

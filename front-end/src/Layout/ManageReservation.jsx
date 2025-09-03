@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate, Outlet } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
@@ -35,12 +35,6 @@ function ManageReservation() {
 
   const [reservation, setReservation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [assignMode, setAssignMode] = useState(false);
-  const [availableTables, setAvailableTables] = useState([]);
-  const [selectedTableId, setSelectedTableId] = useState("");
-  const [assignError, setAssignError] = useState("");
-  const [assignSuccess, setAssignSuccess] = useState("");
-  const [loadingTables, setLoadingTables] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -51,99 +45,51 @@ function ManageReservation() {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+            selectedRestaurant.restaurantId
+          }/reservations/${reservationId}`,
           { withCredentials: true }
         );
         setReservation(res.data.data);
       } catch (err) {
-          setReservation(null);
-          console.log(err);
+        setReservation(null);
+        console.log(err);
       }
       setLoading(false);
     };
     fetchReservation();
   }, [selectedRestaurant, reservationId]);
 
-  useEffect(() => {
-    if (assignMode && selectedRestaurant) {
-      setLoadingTables(true);
-      const fetchAvailableTables = async () => {
-        try {
-          const res = await axios.get(
-            `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table`,
-            { withCredentials: true }
-          );
-          setAvailableTables(
-            (res.data.data || []).filter(
-              (table) => table.tableStatus === "Available"
-            )
-          );
-        } catch (err) {
-            setAvailableTables([]);
-            console.log(err);
-        }
-        setLoadingTables(false);
-      };
-      fetchAvailableTables();
-    }
-  }, [assignMode, selectedRestaurant]);
-
-  const handleAssignTable = async () => {
-    if (!selectedTableId) {
-      setAssignError("Please select a table.");
-      setAssignSuccess("");
-      return;
-    }
-    setAssignError("");
-    setActionLoading(true);
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/assign-table?tableId=${selectedTableId}`,
-        {},
-        { withCredentials: true }
-      );
-      setAssignSuccess("Table assigned successfully!");
-      setReservation((prev) => ({
-        ...prev,
-        tableId: selectedTableId,
-        status: "Seated",
-      }));
-        navigate("/reservations");
-    } catch (err) {
-      setAssignError("Failed to assign table.");
-        setAssignSuccess("");
-        console.log(err);
-    }
-    setActionLoading(false);
-  };
-
   const handleCancelReservation = async () => {
     setActionLoading(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/cancel`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+          selectedRestaurant.restaurantId
+        }/reservations/${reservation.id}/cancel`,
         {},
         { withCredentials: true }
       );
       setReservation((prev) => ({ ...prev, status: "Cancelled" }));
     } catch (err) {
-        console.log(err);
+      console.log(err);
     }
     setActionLoading(false);
-      setOpenCancelDialog(false);
-      
+    setOpenCancelDialog(false);
   };
 
   const handleDeleteReservation = async () => {
     setActionLoading(true);
     try {
       await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+          selectedRestaurant.restaurantId
+        }/reservations/${reservation.id}`,
         { withCredentials: true }
       );
       navigate("/reservations");
     } catch (err) {
-        console.log(err);
+      console.log(err);
     }
     setActionLoading(false);
     setOpenDeleteDialog(false);
@@ -180,7 +126,7 @@ function ManageReservation() {
       <Button
         variant="outlined"
         onClick={() => navigate("/reservations")}
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, textTransform: "none", fontWeight: 600 }}
       >
         Back to Reservations
       </Button>
@@ -238,13 +184,13 @@ function ManageReservation() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <NotesIcon fontSize="small" />
                   <Typography variant="body2">
-                    {reservation.specialRequests || "-"}
+                    Special requests : {reservation.specialRequests || "-"}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TableRestaurantIcon fontSize="small" />
                   <Typography variant="body2">
-                    {reservation.tableId
+                    Assigned table : {reservation.tableId
                       ? `Table #${reservation.tableId}`
                       : "Not assigned"}
                   </Typography>
@@ -252,7 +198,11 @@ function ManageReservation() {
               </Stack>
             </CardContent>
           </Card>
-          <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: "wrap", justifyContent: "space-around" }}>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ mt: 2, flexWrap: "wrap", justifyContent: "space-around" }}
+          >
             <Button
               variant="outlined"
               color="primary"
@@ -269,7 +219,11 @@ function ManageReservation() {
               startIcon={<CancelIcon />}
               onClick={() => setOpenCancelDialog(true)}
               sx={{ textTransform: "none", fontWeight: 600 }}
-              disabled={reservation.status === "Cancelled" || reservation.status === "Seated" || actionLoading}
+              disabled={
+                reservation.status === "Cancelled" ||
+                reservation.status === "Seated" ||
+                actionLoading
+              }
             >
               Cancel
             </Button>
@@ -283,20 +237,51 @@ function ManageReservation() {
             >
               Delete
             </Button>
-            <Button
-              variant="contained"
-              color="success"
-              startIcon={<AssignmentTurnedInIcon />}
-              onClick={() => setAssignMode(true)}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-              disabled={
-                reservation.status === "Cancelled" ||
-                reservation.status === "Seated" ||
-                assignMode
-              }
-            >
-              Assign Table
-            </Button>
+            {!reservation.tableId && (
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<AssignmentTurnedInIcon />}
+                onClick={() =>
+                  navigate(`/reservations/${reservation.id}/manage/assign-table`)
+                }
+                sx={{ textTransform: "none", fontWeight: 600 }}
+                disabled={
+                  reservation.status === "Cancelled" ||
+                  reservation.status === "Seated"
+                }
+              >
+                Assign Table
+              </Button>
+            )}
+            {reservation.tableId && (
+              <>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AssignmentTurnedInIcon />}
+                  onClick={() =>
+                    navigate(`/reservations/${reservation.id}/manage/take-order`)
+                  }
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                  disabled={reservation.status === "Cancelled"}
+                >
+                  Take Order
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="info"
+                  startIcon={<AssignmentTurnedInIcon />}
+                  onClick={() =>
+                    navigate(`/reservations/${reservation.id}/manage/view-order`)
+                  }
+                  sx={{ textTransform: "none", fontWeight: 600, ml: 1}}
+                  disabled={reservation.status === "Cancelled"}
+                >
+                  View Order
+                </Button>
+              </>
+            )}
           </Stack>
         </Box>
 
@@ -311,127 +296,9 @@ function ManageReservation() {
           }}
         />
 
-        {/* Right: Assign Table */}
+        {/* Right: Render child route here */}
         <Box sx={{ flex: 1, minWidth: 320 }}>
-          {assignMode && (
-            <Box>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Assign Table
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-              {loadingTables ? (
-                <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-                  <CircularProgress />
-                </Box>
-              ) : availableTables.length === 0 ? (
-                <Typography color="text.secondary" sx={{ mb: 2 }}>
-                  No available tables found.
-                </Typography>
-              ) : (
-                <Box
-                  sx={{
-                    maxHeight: 560,
-                    overflowY: "auto",
-                    pr: 1,
-                  }}
-                >
-                  <Stack spacing={2}>
-                    {availableTables.map((table) => {
-                      const isSelected = selectedTableId === table.id;
-                      return (
-                        <Card
-                          key={table.id}
-                          variant="outlined"
-                          sx={{
-                            borderColor: isSelected ? "primary.main" : "grey.300",
-                            borderWidth: isSelected ? 2 : 1,
-                            borderRadius: 2,
-                            boxShadow: isSelected ? 2 : 0,
-                            backgroundColor: isSelected ? "action.hover" : "background.paper",
-                            cursor: "pointer",
-                            transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
-                            p: 2,
-                            position: "relative",
-                            minWidth: 220,
-                          }}
-                          onClick={() => setSelectedTableId(table.id)}
-                        >
-                          {/* Top Row */}
-                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            {/* Top Left: Table Name */}
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <TableRestaurantIcon fontSize="small" />
-                              <Typography variant="subtitle1" fontWeight={600}>
-                                {table.tableName}
-                              </Typography>
-                            </Box>
-                            {/* Top Right: Table Type */}
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {table.tableType}
-                            </Typography>
-                          </Box>
-                          {/* Middle: Capacity */}
-                          <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
-                            <GroupIcon fontSize="small" sx={{ mr: 0.5 }} />
-                            <Typography variant="body2">
-                              Capacity: {table.tableCapacity}
-                            </Typography>
-                          </Box>
-                          {/* Bottom Row */}
-                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mt: 2 }}>
-                            {/* Bottom Left: Table Name (optional) */}
-                            <Typography variant="caption" color="text.secondary">
-                              {table.tableName}
-                            </Typography>
-                            {/* Bottom Right: Buttons (only if selected) */}
-                            {isSelected && (
-                              <Stack direction="row" spacing={1}>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    setSelectedTableId("");
-                                    setAssignError("");
-                                    setAssignSuccess("");
-                                  }}
-                                  disabled={assignSuccess}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  variant="contained"
-                                  color="primary"
-                                  size="small"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    handleAssignTable();
-                                  }}
-                                  disabled={!selectedTableId || assignSuccess || actionLoading}
-                                >
-                                  Confirm
-                                </Button>
-                              </Stack>
-                            )}
-                          </Box>
-                        </Card>
-                      );
-                    })}
-                  </Stack>
-                </Box>
-              )}
-              {assignError && (
-                <Typography color="error" variant="body2" sx={{ mb: 1 }}>
-                  {assignError}
-                </Typography>
-              )}
-              {assignSuccess && (
-                <Typography color="success.main" variant="body2" sx={{ mb: 1 }}>
-                  {assignSuccess}
-                </Typography>
-              )}
-            </Box>
-          )}
+          <Outlet context={{ reservation, setReservation }} />
         </Box>
       </Stack>
 

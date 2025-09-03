@@ -15,6 +15,10 @@ router.use(isReservationExists);
 // Routes
 router
   .route("/")
+  .get(
+    requirePermission(PERMISSIONS.CAN_VIEW_ORDER),
+    controller.getAllOrders
+  )
   .post(validate(orderSchema),
     requirePermission(PERMISSIONS.CAN_CREATE_ORDER),
     controller.createOrder)

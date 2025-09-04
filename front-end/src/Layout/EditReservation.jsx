@@ -43,7 +43,7 @@ function EditReservation() {
             numberOfGuests: r.numberOfGuests?.toString() || "",
             specialRequests: r.specialRequests || "",
             reservationTime: r.reservationTime
-              ? r.reservationTime.slice(0, 16)
+              ? toLocalDatetimeInputValue(r.reservationTime)
               : "",
           });
         }
@@ -123,6 +123,22 @@ function EditReservation() {
   const handleCancel = () => {
     navigate(-1);
   };
+
+  function toLocalDatetimeInputValue(dateString) {
+    const date = new Date(dateString);
+    const pad = (n) => n.toString().padStart(2, "0");
+    return (
+      date.getFullYear() +
+      "-" +
+      pad(date.getMonth() + 1) +
+      "-" +
+      pad(date.getDate()) +
+      "T" +
+      pad(date.getHours()) +
+      ":" +
+      pad(date.getMinutes())
+    );
+  }
 
   return (
     <ReservationForm

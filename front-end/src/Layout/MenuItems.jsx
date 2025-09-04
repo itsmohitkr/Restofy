@@ -22,6 +22,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Chip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
@@ -35,6 +36,8 @@ function MenuItems() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+  const [creatingMenu, setCreatingMenu] = useState(false);
   const navigate = useNavigate();
 
   // Fetch menu for the selected restaurant
@@ -42,6 +45,7 @@ function MenuItems() {
     if (!selectedRestaurant) return;
     const fetchMenu = async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
@@ -49,8 +53,11 @@ function MenuItems() {
         );
         setMenu(res.data.data);
       } catch (err) {
+        if (err.response?.status === 404) {
           setMenu(null);
-          console.log(err);
+        } else {
+          setError("Failed to fetch menu.");
+        }
       }
       setLoading(false);
     };
@@ -65,6 +72,7 @@ function MenuItems() {
     }
     const fetchMenuItems = async () => {
       setLoading(true);
+      setError("");
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem`,
@@ -72,18 +80,36 @@ function MenuItems() {
         );
         setMenuItems(res.data.data || []);
       } catch (err) {
-          setMenuItems([]);
-          console.log(err);
+        setMenuItems([]);
+        setError("Failed to fetch menu items.");
       }
       setLoading(false);
     };
     fetchMenuItems();
   }, [menu, selectedRestaurant]);
 
+  // Create menu if not exists
+  const handleCreateMenu = async () => {
+    setCreatingMenu(true);
+    setError("");
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
+        {}, // Add menu data if needed
+        { withCredentials: true }
+      );
+      setMenu(res.data.data);
+    } catch (err) {
+      setError("Failed to create menu.");
+    }
+    setCreatingMenu(false);
+  };
+
   // Delete menu item
   const handleDeleteMenuItem = async () => {
     if (!itemToDelete) return;
     setDeleting(true);
+    setError("");
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem/${itemToDelete}`,
@@ -93,8 +119,7 @@ function MenuItems() {
       setDeleteDialogOpen(false);
       setItemToDelete(null);
     } catch (err) {
-        // Optionally show error
-        console.log(err);
+      setError("Failed to delete menu item.");
     }
     setDeleting(false);
   };
@@ -102,6 +127,8 @@ function MenuItems() {
   // Consistent colors
   const mainTextColor = "#374151";
   const labelColor = "#607d8b";
+  const greenColor = "#317433ff";
+  const redColor = "#d93c30ff";
 
   if (!selectedRestaurant) {
     return (
@@ -121,27 +148,40 @@ function MenuItems() {
             ? `${selectedRestaurant.restaurantName} Menu Items`
             : "Menu Items"}
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate("/menu-items/new")}
-          size="small"
-          sx={{ textTransform: "none", fontWeight: 600 }}
-        >
-          New Menu Item
-        </Button>
+        {menu && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/menu-items/new")}
+            size="small"
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
+            New Menu Item
+          </Button>
+        )}
       </Box>
       <Divider sx={{ mb: 2 }} />
 
-      {loading ? (
+      {loading || creatingMenu ? (
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
+      ) : error ? (
+        <Box sx={{ textAlign: "center", my: 4 }}>
+          <Typography color="error">{error}</Typography>
+        </Box>
       ) : !menu ? (
         <Box sx={{ textAlign: "center", my: 4 }}>
-          <Typography sx={{ mb: 2 }}>
+          <Typography sx={{ mb: 2 }} color="warning.main">
             No menu found for this restaurant.
           </Typography>
+          <Button
+            variant="contained"
+            onClick={handleCreateMenu}
+            disabled={creatingMenu}
+          >
+            Create Menu
+          </Button>
         </Box>
       ) : (
         <TableContainer component={Paper}>
@@ -205,7 +245,7 @@ function MenuItems() {
                       {item.itemCategory}
                     </TableCell>
                     <TableCell sx={{ color: labelColor }}>
-                      {item.itemType}
+                      <Chip label={item.itemType} sx={{ bgcolor: item.itemType === "Veg" ? greenColor : redColor, color: "white" }} size="small" />
                     </TableCell>
                     <TableCell sx={{ color: labelColor }}>
                       {item.itemStatus}

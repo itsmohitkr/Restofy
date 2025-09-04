@@ -102,11 +102,9 @@ function DashboardAnalytics({ restaurant }) {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Analytics for {restaurant.restaurantName}
+        Analytics
       </Typography>
-      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-        {restaurant.restaurantDescription}
-      </Typography>
+    
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={2}>

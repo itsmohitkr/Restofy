@@ -17,12 +17,13 @@ import SideBar from '../Component/SideBar/SideBar';
 import Dashboard from '../Component/MainContent/Dashboard';
 import AllRoutes from './AllRoutes';
 import { RestaurantContext } from '../Context/RestaurantContext';
+import { Divider } from '@mui/material';
 
 
 
 function Layout() {
   const { setAuthState } = useContext(AuthContext);
-    
+  const { selectedRestaurant } = useContext(RestaurantContext);
 
   const handleLogout = async() => {
     try {
@@ -68,6 +69,13 @@ function Layout() {
                 </Typography>
 
                 <Stack direction="row" spacing={1}>
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: 600,borderBottom: "1px solid", borderColor: "primary.main",color: "primary.main" }}
+                  >
+                    {selectedRestaurant ? (selectedRestaurant.restaurantName).toLowerCase() : null}
+                  </Typography>
+                  <Divider orientation="vertical" flexItem />
                   <Button color="inherit" sx={{ textTransform: "none" }}>
                     <Link
                       to="/"

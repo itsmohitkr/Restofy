@@ -27,6 +27,22 @@ import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import CancelIcon from "@mui/icons-material/Cancel";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Chip from "@mui/material/Chip";
+
+function getStatusColor(status) {
+  switch (status) {
+    case "Booked":
+      return "primary";
+    case "Seated":
+      return "info";
+    case "Completed":
+      return "success";
+    case "Cancelled":
+      return "error";
+    default:
+      return "default";
+  }
+}
 
 function ManageReservation() {
   const { reservationId } = useParams();
@@ -138,7 +154,39 @@ function ManageReservation() {
       >
         {/* Left: Reservation Details in Card */}
         <Box sx={{ flex: 1, minWidth: 340 }}>
-          <Card variant="outlined" sx={{ mb: 2, p: 0 }}>
+          <Card variant="outlined" sx={{ mb: 2, p: 0, position: "relative",borderRadius: "8px" }}>
+            {/* Edit & Delete icons on top-right */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 12,
+                right: 16,
+                zIndex: 2,
+                display: "flex",
+                gap: 1,
+              }}
+            >
+            {reservation.status !== "Completed" && (
+                <Button
+                  size="small"
+                  color="primary"
+                  onClick={handleEditReservation}
+                  sx={{ minWidth: 0, p: 1, borderRadius: "50%" }}
+                  disabled={actionLoading}
+                >
+                  <EditIcon />
+                </Button>
+            )}
+            <Button
+              size="small"
+              color="error"
+              onClick={() => setOpenDeleteDialog(true)}
+              sx={{ minWidth: 0, p: 1, borderRadius: "50%" }}
+              disabled={actionLoading}
+              >
+              <DeleteIcon />
+            </Button>
+              </Box>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 <AssignmentTurnedInIcon
@@ -177,9 +225,14 @@ function ManageReservation() {
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <InfoIcon fontSize="small" />
-                  <Typography variant="body2">
-                    Status: {reservation.status}
+                  <Typography variant="body2" sx={{ mr: 1 }}>
+                    Status:
                   </Typography>
+                  <Chip
+                    label={reservation.status}
+                    color={getStatusColor(reservation.status)}
+                    size="small"
+                  />
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <NotesIcon fontSize="small" />
@@ -190,7 +243,8 @@ function ManageReservation() {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TableRestaurantIcon fontSize="small" />
                   <Typography variant="body2">
-                    Assigned table : {reservation.tableId
+                    Assigned table :{" "}
+                    {reservation.tableId
                       ? `Table #${reservation.tableId}`
                       : "Not assigned"}
                   </Typography>
@@ -203,47 +257,33 @@ function ManageReservation() {
             spacing={2}
             sx={{ mt: 2, flexWrap: "wrap", justifyContent: "space-around" }}
           >
-            <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={handleEditReservation}
-              disabled={actionLoading}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outlined"
-              color="warning"
-              startIcon={<CancelIcon />}
-              onClick={() => setOpenCancelDialog(true)}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-              disabled={
-                reservation.status === "Cancelled" ||
-                reservation.status === "Seated" ||
-                actionLoading
-              }
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => setOpenDeleteDialog(true)}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-              disabled={actionLoading}
-            >
-              Delete
-            </Button>
-            {!reservation.tableId && (
+            {/* Cancel button */}
+            {reservation.status !== "Completed" && (
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<CancelIcon />}
+                onClick={() => setOpenCancelDialog(true)}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+                disabled={
+                  reservation.status === "Cancelled" ||
+                  reservation.status === "Seated" ||
+                  actionLoading
+                }
+              >
+                Cancel
+              </Button>
+            )}
+            {/* Assign Table button */}
+            {!reservation.tableId && reservation.status !== "Completed" && (
               <Button
                 variant="contained"
                 color="success"
                 startIcon={<AssignmentTurnedInIcon />}
                 onClick={() =>
-                  navigate(`/reservations/${reservation.id}/manage/assign-table`)
+                  navigate(
+                    `/reservations/${reservation.id}/manage/assign-table`
+                  )
                 }
                 sx={{ textTransform: "none", fontWeight: 600 }}
                 disabled={
@@ -254,28 +294,35 @@ function ManageReservation() {
                 Assign Table
               </Button>
             )}
+            {/* Take Order & View Order buttons */}
             {reservation.tableId && (
               <>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AssignmentTurnedInIcon />}
-                  onClick={() =>
-                    navigate(`/reservations/${reservation.id}/manage/take-order`)
-                  }
-                  sx={{ textTransform: "none", fontWeight: 600 }}
-                  disabled={reservation.status === "Cancelled"}
-                >
-                  Take Order
-                </Button>
+                {reservation.status !== "Completed" && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AssignmentTurnedInIcon />}
+                    onClick={() =>
+                      navigate(
+                        `/reservations/${reservation.id}/manage/take-order`
+                      )
+                    }
+                    sx={{ textTransform: "none", fontWeight: 600 }}
+                    disabled={reservation.status === "Cancelled"}
+                  >
+                    Take Order
+                  </Button>
+                )}
                 <Button
                   variant="outlined"
                   color="info"
                   startIcon={<AssignmentTurnedInIcon />}
                   onClick={() =>
-                    navigate(`/reservations/${reservation.id}/manage/view-order`)
+                    navigate(
+                      `/reservations/${reservation.id}/manage/view-order`
+                    )
                   }
-                  sx={{ textTransform: "none", fontWeight: 600, ml: 1}}
+                  sx={{ textTransform: "none", fontWeight: 600, ml: 1 }}
                   disabled={reservation.status === "Cancelled"}
                 >
                   View Order
@@ -284,7 +331,6 @@ function ManageReservation() {
             )}
           </Stack>
         </Box>
-
         {/* Vertical Divider */}
         <Divider
           orientation="vertical"

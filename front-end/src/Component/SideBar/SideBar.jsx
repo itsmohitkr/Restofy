@@ -63,18 +63,6 @@ function SideBar() {
           <ListItemText primary="Restaurant" />
         </ListItemButton>
 
-        <ListItemButton
-          selected={selectedIndex === 8}
-          onClick={(event) => handleListItemClick(event, 8)}
-          component={Link}
-          to="/tables"
-        >
-          <ListItemIcon>
-            <HotelIcon />
-          </ListItemIcon>
-          <ListItemText primary="Tables" />
-        </ListItemButton>
-
         {selectedRestaurant && (
           <>
             <ListItemButton
@@ -90,15 +78,39 @@ function SideBar() {
             </ListItemButton>
 
             <ListItemButton
+              selected={selectedIndex === 6}
+              onClick={(event) => handleListItemClick(event, 6)}
+              component={Link}
+              to="/reservations"
+            >
+              <ListItemIcon>
+                <VisibilityIcon />
+              </ListItemIcon>
+              <ListItemText primary="Reservations" />
+            </ListItemButton>
+
+            <ListItemButton
               selected={selectedIndex === 4}
               onClick={(event) => handleListItemClick(event, 4)}
               component={Link}
               to="/new-table"
             >
               <ListItemIcon>
-                <TableRestaurantIcon />
+                <AddIcon />
               </ListItemIcon>
               <ListItemText primary="New Tables" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={selectedIndex === 8}
+              onClick={(event) => handleListItemClick(event, 8)}
+              component={Link}
+              to="/tables"
+            >
+              <ListItemIcon>
+                <TableRestaurantIcon />
+              </ListItemIcon>
+              <ListItemText primary="Tables" />
             </ListItemButton>
 
             <ListItemButton
@@ -111,18 +123,6 @@ function SideBar() {
                 <RestaurantMenuIcon />
               </ListItemIcon>
               <ListItemText primary="Menu Items" />
-            </ListItemButton>
-
-            <ListItemButton
-              selected={selectedIndex === 6}
-              onClick={(event) => handleListItemClick(event, 6)}
-              component={Link}
-              to="/reservations"
-            >
-              <ListItemIcon>
-                <VisibilityIcon />
-              </ListItemIcon>
-              <ListItemText primary="Reservations" />
             </ListItemButton>
           </>
         )}

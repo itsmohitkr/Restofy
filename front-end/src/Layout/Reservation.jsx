@@ -15,7 +15,22 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import TextField from "@mui/material/TextField";
 import { Link } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
+import { Chip } from "@mui/material";
 
+function getStatusColor(status) {
+  switch (status) {
+    case "Booked":
+      return "primary";
+    case "Seated":
+      return "info";
+    case "Completed":
+      return "success";
+    case "Cancelled":
+      return "error";
+    default:
+      return "default";
+  }
+}
 function Reservation() {
   const [reservations, setReservations] = useState([]);
   const [filterDate, setFilterDate] = useState("");
@@ -144,7 +159,14 @@ function Reservation() {
                   <TableCell>
                     {new Date(reservation.reservationTime).toLocaleString()}
                   </TableCell>
-                  <TableCell>{reservation.status}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={reservation.status}
+                      color={getStatusColor(reservation.status)}
+                      size="small"
+                      sx={{ ml: 1 }}
+                    />
+                  </TableCell>
                   <TableCell>{reservation.specialRequests || "-"}</TableCell>
                   <TableCell>
                     {reservation.tableId

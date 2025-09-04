@@ -40,6 +40,7 @@ function getStatusColor(status) {
   }
 }
 
+
 function Tables() {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -172,6 +173,7 @@ function Tables() {
                       label={table.tableStatus}
                       color={getStatusColor(table.tableStatus)}
                       sx={{ fontWeight: 600 }}
+                      size="small"
                     />
                   </TableCell>
                   <TableCell align="center">

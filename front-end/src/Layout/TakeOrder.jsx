@@ -46,7 +46,8 @@ function TakeOrder() {
         setMenuItems(itemsRes.data.data || []);
       } catch (err) {
         setMenuItems([]);
-        setError("Failed to fetch menu items.");
+          setError("Failed to fetch menu items.");
+          console.log(err);
       }
       setLoading(false);
     };

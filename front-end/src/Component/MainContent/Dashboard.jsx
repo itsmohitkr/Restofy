@@ -4,7 +4,7 @@ import { RestaurantContext } from "../../Context/RestaurantContext";
 import DashboardAnalytics from "../../Layout/DashboardAnalytics";
 
 function Dashboard() {
-  const { selectedRestaurant, setSelectedRestaurant } =
+  const { selectedRestaurant } =
     useContext(RestaurantContext);
 
   return (

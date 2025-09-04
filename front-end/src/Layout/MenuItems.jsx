@@ -82,6 +82,7 @@ function MenuItems() {
       } catch (err) {
         setMenuItems([]);
         setError("Failed to fetch menu items.");
+        console.log(err);
       }
       setLoading(false);
     };
@@ -101,6 +102,8 @@ function MenuItems() {
       setMenu(res.data.data);
     } catch (err) {
       setError("Failed to create menu.");
+      console.log(err);
+
     }
     setCreatingMenu(false);
   };
@@ -120,6 +123,8 @@ function MenuItems() {
       setItemToDelete(null);
     } catch (err) {
       setError("Failed to delete menu item.");
+      console.log(err);
+
     }
     setDeleting(false);
   };

@@ -10,7 +10,7 @@ const orderRoutes = require('../../domains/order/order.router');
 const billRoutes = require('../../domains/bill/bill.router');
 const paymentRoutes = require('../../domains/payment/payment.router');
 const userRoutes = require('../../domains/user/user.router');
-// const analyticsRoutes = require('../../domains/analytics/index');
+const analyticsRoutes = require('../../domains/analytics/analytics.router');
 const { validateParam } = require('../../shared/middleware/validateParam');
 const { isRestaurantExist } = require('../../domains/restaurant/restaurant.controller');
 const { checkRestaurantOwnership } = require('../../shared/middleware/checkRestaurantOwnership');
@@ -24,7 +24,7 @@ router.use("/restaurants/:restaurantId", isRestaurantExist);
 router.use("/restaurants/:restaurantId", checkRestaurantOwnership);
 
 // analytics routes
-// router.use("/restaurants/:restaurantId/analytics", analyticsRoutes);
+router.use("/restaurants/:restaurantId/analytics", analyticsRoutes);
 
 // user routes
 

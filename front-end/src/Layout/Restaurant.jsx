@@ -32,7 +32,7 @@ import Paper from '@mui/material/Paper';
 
 function Restaurant() {
   const [restaurants, setRestaurants] = useState([]);
-  const { selectedRestaurant, setSelectedRestaurant } = useContext(RestaurantContext);
+  const { setSelectedRestaurant } = useContext(RestaurantContext);
   const navigate = useNavigate();
 
   // Dialog state
@@ -106,9 +106,7 @@ function Restaurant() {
     <div>
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
         <Typography variant="h5" sx={{ color: mainTextColor, flexGrow: 1 }}>
-          {selectedRestaurant
-            ? selectedRestaurant.restaurantName
-            : "Restaurants"}
+          Restaurants
         </Typography>
         <Button
           variant="outlined"

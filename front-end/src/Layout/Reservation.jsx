@@ -13,9 +13,10 @@ import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import TextField from "@mui/material/TextField";
+import SearchIcon from "@mui/icons-material/Search";
 import { Link } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import { Chip } from "@mui/material";
+import { Chip, Stack, InputAdornment } from "@mui/material";
 
 function getStatusColor(status) {
   switch (status) {
@@ -31,9 +32,11 @@ function getStatusColor(status) {
       return "default";
   }
 }
+
 function Reservation() {
   const [reservations, setReservations] = useState([]);
   const [filterDate, setFilterDate] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const { selectedRestaurant } = useContext(RestaurantContext);
 
   useEffect(() => {
@@ -48,19 +51,27 @@ function Reservation() {
         );
         setReservations(res.data.data || []);
       } catch (err) {
-          setReservations([]);
-          console.log(err);
+        setReservations([]);
+        console.log(err);
       }
     };
     fetchReservations();
   }, [selectedRestaurant]);
 
-  // Filter reservations by selected date (YYYY-MM-DD)
-  const filteredReservations = filterDate
-    ? reservations.filter((reservation) =>
-        reservation.reservationTime.startsWith(filterDate)
-      )
-    : reservations;
+  // Real-time search and filter
+  const filteredReservations = reservations.filter((r) => {
+    const term = searchTerm.trim().toLowerCase();
+    const matchesSearch =
+      !term ||
+      r.firstName?.toLowerCase().includes(term) ||
+      r.lastName?.toLowerCase().includes(term) ||
+      r.email?.toLowerCase().includes(term) ||
+      r.contact?.toLowerCase().includes(term) ||
+      r.status?.toLowerCase().includes(term);
+    const matchesDate =
+      !filterDate || r.reservationTime.startsWith(filterDate);
+    return matchesSearch && matchesDate;
+  });
 
   if (!selectedRestaurant) {
     return (
@@ -96,16 +107,43 @@ function Reservation() {
         </Button>
       </Box>
       <Divider sx={{ mb: 2 }} />
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
-        <CalendarTodayIcon color="action" />
-        <TextField
-          type="date"
-          size="small"
-          label="Filter by Date"
-          InputLabelProps={{ shrink: true }}
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-        />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mb: 2,
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Filter by date on the left */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <CalendarTodayIcon color="action" />
+          <TextField
+            type="date"
+            size="small"
+            label="Filter by Date"
+            InputLabelProps={{ shrink: true }}
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+        </Box>
+        {/* Search bar on the right */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <TextField
+            size="small"
+            label="Search by Name, Email, Phone, Status"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ minWidth: 350 }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
       </Box>
       <TableContainer component={Paper}>
         <Table>

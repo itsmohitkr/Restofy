@@ -96,7 +96,8 @@ function ViewOrder() {
         }
       } catch (err) {
         setOrder(null);
-        setError("Failed to fetch order details.");
+          setError("Failed to fetch order details.");
+          console.log(err); 
       }
       setLoading(false);
     };
@@ -121,7 +122,9 @@ function ViewOrder() {
       }));
       setSuccess("Order finalized successfully!");
     } catch (err) {
-      setError("Failed to finalize order.");
+        setError("Failed to finalize order.");
+        console.log(err);
+
     }
     setActionLoading(false);
   };
@@ -145,7 +148,9 @@ function ViewOrder() {
       setBill(billRes.data.data); // Store bill details including bill.id
       setSuccess("Bill generated successfully!");
     } catch (err) {
-      setError("Failed to generate bill.");
+        setError("Failed to generate bill.");
+        console.log(err);
+
     }
     setActionLoading(false);
   };
@@ -168,7 +173,9 @@ function ViewOrder() {
       setSuccess("Payment completed successfully!");
       setPaymentDialogOpen(false);
     } catch (err) {
-      setError("Failed to process payment.");
+        setError("Failed to process payment.");
+        console.log(err);
+
     }
     setActionLoading(false);
   };

@@ -102,7 +102,6 @@ function ViewOrder() {
       setLoading(false);
     };
     fetchData();
-    // eslint-disable-next-line
   }, [selectedRestaurant, reservationId]);
 
   // Finalize order handler

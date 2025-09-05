@@ -1,19 +1,17 @@
 const asyncErrorBoundary = require("../../shared/error/asyncErrorBoundary");
+const { sendErrorResponse, sendSuccessResponse } = require("../../utils/helper/responseHelpers");
 const analyticsService = require("./analytics.service");
+const { StatusCodes } = require("http-status-codes");
 
 const getAnalytics = async (req, res) => {
   const { restaurantId } = req.params;
   if (!restaurantId) {
-    return res.status(400).json({ status: 400, message: "restaurantId is required" });
+      return sendErrorResponse(res, StatusCodes.BAD_REQUEST, "restaurantId is required", "Params required");
   }
 
   const data = await analyticsService.getAnalytics(restaurantId);
 
-  res.json({
-    status: 200,
-    message: "Analytics fetched successfully",
-    data,
-  });
+  sendSuccessResponse(res, StatusCodes.OK, "Analytics fetched successfully", data);
 };
 
 module.exports = {

@@ -37,7 +37,9 @@ function DashboardAnalytics({ restaurant }) {
     setLoading(true);
     axios
       .get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurant.restaurantId}/analytics`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+          restaurant.restaurantId
+        }/analytics`,
         { withCredentials: true }
       )
       .then((res) => {
@@ -113,7 +115,7 @@ function DashboardAnalytics({ restaurant }) {
                   </Typography>
                 </Box>
                 <Typography
-                  variant="h3"
+                  variant="h5"
                   sx={{ fontWeight: 600, color: "#43a047" }}
                 >
                   {analytics.orders.count}
@@ -142,7 +144,7 @@ function DashboardAnalytics({ restaurant }) {
                   </Typography>
                 </Box>
                 <Typography
-                  variant="h3"
+                  variant="h5"
                   sx={{ fontWeight: 600, color: "#43a047" }}
                 >
                   {analytics.reservations.count}
@@ -181,7 +183,7 @@ function DashboardAnalytics({ restaurant }) {
                   </Typography>
                 </Box>
                 <Typography
-                  variant="h3"
+                  variant="h5"
                   sx={{ fontWeight: 600, color: "#2e3b55" }}
                 >
                   {analytics.tables.count}
@@ -215,7 +217,7 @@ function DashboardAnalytics({ restaurant }) {
                   </Typography>
                 </Box>
                 <Typography
-                  variant="h3"
+                  variant="h5"
                   sx={{ fontWeight: 600, color: "#d32f2f" }}
                 >
                   {analytics.menuItems.count}
@@ -333,11 +335,6 @@ function DashboardAnalytics({ restaurant }) {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Grid container spacing={2}>
           {/* Payments */}
           <Grid item xs={12} md={6}>
             <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
@@ -371,6 +368,7 @@ function DashboardAnalytics({ restaurant }) {
               </CardContent>
             </Card>
           </Grid>
+          {/* Bills */}
           {/* Bills */}
           <Grid item xs={12} md={6}>
             <Card sx={{ borderRadius: 3, boxShadow: 1 }}>

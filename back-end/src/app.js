@@ -13,9 +13,9 @@ const routes = require("./routes/index");
 
 // Note: Individual route imports moved to routes/index.js for better organization
 
-// Middleware
+// Middleware 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "http://localhost:5173", // Add your frontend URL here
   credentials: true,
 }));
 app.use(cookieParser());

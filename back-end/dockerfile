@@ -1,0 +1,23 @@
+# 1. Use official Node.js LTS image as base
+
+FROM node:18
+
+# 2. Set working directory inside the container
+WORKDIR /app
+
+# 3. Copy only package files first (for dependency caching)
+COPY package*.json ./
+
+# 4. Install dependencies (production only)
+RUN npm install --production
+
+# 5. Copy the rest of the backend source code
+COPY . .
+
+RUN npx prisma generate
+
+# 6. Expose the backend service port (adjust if not 3001)
+EXPOSE 3001
+
+# 7. Start the app
+CMD ["npm", "start"]

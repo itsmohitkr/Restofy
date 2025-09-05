@@ -14,6 +14,10 @@ const analyticsRoutes = require('../../domains/analytics/analytics.router');
 const { validateParam } = require('../../shared/middleware/validateParam');
 const { isRestaurantExist } = require('../../domains/restaurant/restaurant.controller');
 const { checkRestaurantOwnership } = require('../../shared/middleware/checkRestaurantOwnership');
+const profileRoutes = require('../../domains/profile/profile.router');
+
+// profile routes
+router.use('/profile', profileRoutes);
 
 // Restaurant routes
 router.use("/restaurants", restaurantRoutes);

@@ -28,6 +28,7 @@ const EditMenuItem = lazy(() => import("./Layout/EditMenuItem"));
 const AssignTable = lazy(() => import("./Layout/AssignTable"));
 const TakeOrder = lazy(() => import("./Layout/TakeOrder"));
 const ViewOrder = lazy(() => import("./Layout/ViewOrder"));
+const Profile = lazy(() => import("./Layout/Profile"));
 
 const NotFound = () => (
   <Box sx={{ p: 4, textAlign: "center" }}>
@@ -90,6 +91,7 @@ function App() {
           <Route path="new-restaurant" element={<NewRestaurant />} />
           <Route path="new-reservation" element={<NewReservation />} />
           <Route path="reservations" element={<Reservation />} />
+          <Route path="profile" element={<Profile />} />
           <Route
             path="reservations/:reservationId/manage"
             element={<ManageReservation />}

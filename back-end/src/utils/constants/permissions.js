@@ -78,6 +78,12 @@ const PERMISSIONS = {
   CAN_VIEW_USERS: "CAN_VIEW_USERS",
   CAN_UPDATE_USER: "CAN_UPDATE_USER",
   CAN_DELETE_USER: "CAN_DELETE_USER",
+
+
+  // profile
+  CAN_VIEW_PROFILE: "CAN_VIEW_PROFILE",
+  CAN_EDIT_PROFILE: "CAN_EDIT_PROFILE",
+  CAN_DELETE_PROFILE: "CAN_DELETE_PROFILE",
 };
 
 // Default permissions for each role
@@ -87,6 +93,7 @@ const ROLE_PERMISSIONS = {
   Staff: [
     // Restaurant
     PERMISSIONS.CAN_VIEW_RESTAURANT,
+
 
     // Menu
     PERMISSIONS.CAN_VIEW_MENU,
@@ -123,6 +130,10 @@ const ROLE_PERMISSIONS = {
     // User/Staff
     PERMISSIONS.CAN_VIEW_USER,
     PERMISSIONS.CAN_UPDATE_USER,
+
+    // profile
+    PERMISSIONS.CAN_VIEW_PROFILE,
+
   ],
 
   Customer: [

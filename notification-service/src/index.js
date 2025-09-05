@@ -1,6 +1,5 @@
-const { startDLQConsumer } = require('./jobs/dlqConsumer');
-const { startNotificationConsumer } = require('./jobs/notificationConsumer');
-
+const { startDLQConsumer } = require("./jobs/dlqConsumer");
+const { startNotificationConsumer } = require("./jobs/notificationConsumer");
 
 async function startAllConsumers() {
     const results = await Promise.allSettled([

@@ -17,6 +17,18 @@ async function startDLQConsumer() {
     const channel = await connection.createChannel();
     const dlq = "notificationQueue.dlq";
 
+  //   🔑 Why this works
+	// •	Your producer consumer (startNotificationConsumer) already sets x-dead-letter-exchange and x-dead-letter-routing-key so failed messages will be rerouted to notificationExchange.dlq → notificationQueue.dlq.
+	// •	By asserting exchange + queue in startDLQConsumer, you guarantee the DLQ exists even if nothing was routed there yet.
+	// •	Without this, RabbitMQ throws 404 NOT_FOUND because the queue isn’t created automatically when you only try to consume.
+    const dlqExchange = "notificationExchange.dlq";
+    const dlqRoutingKey = "notification.dlq";
+
+    // ✅ Make sure DLQ infra exists
+    await channel.assertExchange(dlqExchange, "direct", { durable: true });
+    await channel.assertQueue(dlq, { durable: true });
+    await channel.bindQueue(dlq, dlqExchange, dlqRoutingKey);
+
     console.log("Waiting for messages in DLQ:", dlq);
 
     channel.consume(dlq, async (msg) => {
@@ -26,14 +38,11 @@ async function startDLQConsumer() {
           console.log(
             "+-----------------------------------------------------------------+"
           );
-          console.log(
-            "Received notification from DLQ:",
-            notificationPayload
-          );
+          console.log("Received notification from DLQ:", notificationPayload);
           console.log(
             "+-----------------------------------------------------------------+"
           );
-         
+
           // Process the notification (e.g., send a push notification)
           await processNotification(notificationPayload);
 

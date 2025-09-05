@@ -3,7 +3,7 @@ const { startNotificationConsumer } = require("./jobs/notificationConsumer");
 
 async function startAllConsumers() {
     const results = await Promise.allSettled([
-        startNotificationConsumer(),
+         startNotificationConsumer(),
         startDLQConsumer()
     ]);
 

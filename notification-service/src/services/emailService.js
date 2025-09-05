@@ -77,10 +77,16 @@ async function sendNotification(notificationPayload) {
       status: "PENDING",
     };
 
-    // 1. insert notification record in DB
-    notificationRecord = await prisma.notification.create({
-      data: notificationData,
-    });
+    // 1. Try to insert notification record in DB, but continue even if it fails
+    try {
+      notificationRecord = await prisma.notification.create({
+        data: notificationData,
+      });
+      console.log("Notification record created in database:", notificationRecord.id);
+    } catch (dbError) {
+      console.warn("Could not create notification record in database, but will still send email:", dbError.message);
+      // Continue without database record
+    }
 
     // 2. send the mail
     const mailOptions = {
@@ -95,11 +101,17 @@ async function sendNotification(notificationPayload) {
     const info = await sendEmailWithRetry(mailOptions, 3);
     console.log("Email sent successfully:", info);
 
-    // 3. once the mail is sent, update the record
-    await prisma.notification.update({
-      where: { id: notificationRecord.id },
-      data: { status: "SENT", sentAt: new Date() },
-    });
+    // 3. once the mail is sent, update the record if it exists
+    if (notificationRecord && notificationRecord.id) {
+      try {
+        await prisma.notification.update({
+          where: { id: notificationRecord.id },
+          data: { status: "SENT", sentAt: new Date() },
+        });
+      } catch (dbError) {
+        console.warn("Could not update notification record, but email was sent successfully:", dbError.message);
+      }
+    }
   } catch (error) {
     if (notificationRecord) {
       try {

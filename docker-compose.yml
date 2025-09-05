@@ -22,6 +22,9 @@ services:
       - ./back-end/.env.production
     ports:
       - "3001:3001"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - restofy-net
 
@@ -32,7 +35,8 @@ services:
     env_file:
       - ./notification-service/.env.production
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       - restofy-net
 
@@ -41,6 +45,11 @@ services:
     ports:
       - "5672:5672"   # RabbitMQ
       - "15672:15672" # Management UI
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - restofy-net
 

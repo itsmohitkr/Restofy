@@ -413,3 +413,97 @@ See `future.md` for planned features:
 
 ## Contact
 Author: Mohit Kumar
+---
+
+## Frontend
+
+The frontend is built with modern JavaScript frameworks and tools, located in the `front-end/` directory. It provides the user interface for restaurant owners, staff, and customers to interact with the Restofy platform.
+
+- **Tech Stack:** Vite, React, modern JavaScript (ES6+), CSS
+- **Structure:**
+   - `src/` contains all React components, context providers, layouts, and assets
+   - `AuthPage/` for authentication-related pages (login, signup, password reset)
+   - `Component/` for reusable UI components (sidebar, main content, etc.)
+   - `Context/` for React context (auth, restaurant data)
+   - `Layout/` for page layouts and route management
+   - `public/` for static assets
+- **Features:**
+   - Authentication UI (login, signup, password reset)
+   - Restaurant and table management interfaces
+   - Responsive design
+   - State management with React Context
+   - Integration with backend APIs
+
+---
+
+## Notification Service
+
+The notification service, found in the `notification-service/` directory, is responsible for handling and dispatching notifications (such as email, SMS, or in-app alerts) to users based on system events.
+
+- **Tech Stack:** Node.js, Prisma ORM
+- **Structure:**
+   - `src/` contains the main service logic, channels, dispatcher, jobs, queues, and utilities
+   - `prisma/` for database schema and migrations
+- **Features:**
+   - Channel-based notification dispatch (email, SMS, etc.)
+   - Job and queue management for asynchronous notification delivery
+   - Integration with external notification providers
+   - Extensible for future notification channels
+
+---
+
+## Project Images
+
+Below are images used in the project, located in the `assets` directory:
+
+<div align="center">
+
+<table>
+   <tr>
+      <td><img src="assets/image1.png" alt="image1" width="120"/></td>
+      <td><img src="assets/image2.png" alt="image2" width="120"/></td>
+      <td><img src="assets/image3.png" alt="image3" width="120"/></td>
+      <td><img src="assets/image4.png" alt="image4" width="120"/></td>
+      <td><img src="assets/image5.png" alt="image5" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image6.png" alt="image6" width="120"/></td>
+      <td><img src="assets/image7.png" alt="image7" width="120"/></td>
+      <td><img src="assets/image8.png" alt="image8" width="120"/></td>
+      <td><img src="assets/image9.png" alt="image9" width="120"/></td>
+      <td><img src="assets/image10.png" alt="image10" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image11.png" alt="image11" width="120"/></td>
+      <td><img src="assets/image12.png" alt="image12" width="120"/></td>
+      <td><img src="assets/image13.png" alt="image13" width="120"/></td>
+      <td><img src="assets/image14.png" alt="image14" width="120"/></td>
+      <td><img src="assets/image15.png" alt="image15" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image16.png" alt="image16" width="120"/></td>
+      <td><img src="assets/image17.png" alt="image17" width="120"/></td>
+      <td><img src="assets/image18.png" alt="image18" width="120"/></td>
+      <td><img src="assets/image19.png" alt="image19" width="120"/></td>
+      <td><img src="assets/image20.png" alt="image20" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image21.png" alt="image21" width="120"/></td>
+      <td><img src="assets/image22.png" alt="image22" width="120"/></td>
+      <td><img src="assets/image23.png" alt="image23" width="120"/></td>
+      <td><img src="assets/image24.png" alt="image24" width="120"/></td>
+      <td><img src="assets/image25.png" alt="image25" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image26.png" alt="image26" width="120"/></td>
+      <td><img src="assets/image27.png" alt="image27" width="120"/></td>
+      <td><img src="assets/image28.png" alt="image28" width="120"/></td>
+      <td><img src="assets/image29.png" alt="image29" width="120"/></td>
+      <td><img src="assets/image30.png" alt="image30" width="120"/></td>
+   </tr>
+   <tr>
+      <td><img src="assets/image31.png" alt="image31" width="120"/></td>
+   </tr>
+</table>
+
+</div>

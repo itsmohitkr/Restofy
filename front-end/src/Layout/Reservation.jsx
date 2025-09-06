@@ -84,7 +84,7 @@ function Reservation() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, pb:10 }}>
       <Box
         sx={{
           display: "flex",
@@ -146,7 +146,7 @@ function Reservation() {
         </Box>
       </Box>
       <TableContainer component={Paper}>
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>

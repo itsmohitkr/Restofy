@@ -151,86 +151,88 @@ function TakeOrder() {
   };
 
   return (
-    <Box sx={{ minWidth: 320 }}>
+    <Box sx={{ minWidth: 320, height: '75vh', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         Take Order
       </Typography>
       <Divider sx={{ mb: 2 }} />
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4, flex: 1 }}>
           <CircularProgress />
         </Box>
       ) : menuItems.length === 0 ? (
         <Typography color="text.secondary">No menu items available.</Typography>
       ) : (
         <>
-          <List>
-            {menuItems.map((item) => {
-              const isChecked = !!selectedItems[item.id];
-              return (
-                <ListItem
-                  key={item.id}
-                  divider
-                  sx={{ alignItems: "center" }}
-                >
-                  <Checkbox
-                    edge="start"
-                    checked={isChecked}
-                    onChange={() => handleToggle(item.id)}
-                    tabIndex={-1}
-                    sx={{ mr: 2 }}
-                  />
-                  <ListItemText
-                    primary={`${item.itemName} - ₹${item.itemPrice}`}
-                    secondary={item.itemDescription}
-                  />
-                  {isChecked && (
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={1}
-                      sx={{ ml: 2 }}
-                    >
-                      <Typography variant="body2" sx={{ minWidth: 80 }}>
-                        Qty: {selectedItems[item.id]}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDecrease(item.id)}
-                        edge="end"
-                        sx={{ ml: 0.5 }}
-                        disabled={selectedItems[item.id] <= 1}
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', mb: 2 }}>
+            <List>
+              {menuItems.map((item) => {
+                const isChecked = !!selectedItems[item.id];
+                return (
+                  <ListItem
+                    key={item.id}
+                    divider
+                    sx={{ alignItems: "center" }}
+                  >
+                    <Checkbox
+                      edge="start"
+                      checked={isChecked}
+                      onChange={() => handleToggle(item.id)}
+                      tabIndex={-1}
+                      sx={{ mr: 2 }}
+                    />
+                    <ListItemText
+                      primary={`${item.itemName} - ₹${item.itemPrice}`}
+                      secondary={item.itemDescription}
+                    />
+                    {isChecked && (
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ ml: 2 }}
                       >
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleIncrease(item.id)}
-                        edge="end"
-                        sx={{ ml: 0.5 }}
-                      >
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  )}
-                </ListItem>
-              );
-            })}
-          </List>
-          <Typography sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ minWidth: 80 }}>
+                          Qty: {selectedItems[item.id]}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDecrease(item.id)}
+                          edge="end"
+                          sx={{ ml: 0.5 }}
+                          disabled={selectedItems[item.id] <= 1}
+                        >
+                          <RemoveIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleIncrease(item.id)}
+                          edge="end"
+                          sx={{ ml: 0.5 }}
+                        >
+                          <AddIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    )}
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Box>
+          <Typography sx={{ mt: 1 }}>
             <strong>Selected Items:</strong> {Object.keys(selectedItems).length}
           </Typography>
           {error && (
-            <Typography color="error" sx={{ mt: 2 }}>
+            <Typography color="error" sx={{ mt: 1 }}>
               {error}
             </Typography>
           )}
           {success && (
-            <Typography color="success.main" sx={{ mt: 2 }}>
+            <Typography color="success.main" sx={{ mt: 1 }}>
               {success}
             </Typography>
           )}
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <Stack direction="row" spacing={2} sx={{ mt: 2, mb: 1, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
               color="secondary"

@@ -16,7 +16,7 @@ import TextField from "@mui/material/TextField";
 import SearchIcon from "@mui/icons-material/Search";
 import { Link } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import { Chip, Stack, InputAdornment } from "@mui/material";
+import { Chip, Stack, InputAdornment, Tooltip } from "@mui/material";
 
 function getStatusColor(status) {
   switch (status) {
@@ -68,8 +68,7 @@ function Reservation() {
       r.email?.toLowerCase().includes(term) ||
       r.contact?.toLowerCase().includes(term) ||
       r.status?.toLowerCase().includes(term);
-    const matchesDate =
-      !filterDate || r.reservationTime.startsWith(filterDate);
+    const matchesDate = !filterDate || r.reservationTime.startsWith(filterDate);
     return matchesSearch && matchesDate;
   });
 
@@ -84,7 +83,7 @@ function Reservation() {
   }
 
   return (
-    <Box sx={{ p: 2, pb:10 }}>
+    <Box sx={{ p: 2 }}>
       <Box
         sx={{
           display: "flex",
@@ -93,48 +92,27 @@ function Reservation() {
           mb: 2,
         }}
       >
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h5" gutterBottom sx={{ flexGrow: 1 }}>
           Reservations
         </Typography>
-        <Button
-          component={Link}
-          to="/new-reservation"
-          variant="outlined"
-          color="primary"
-          sx={{ textTransform: "none", fontWeight: 600 }}
-        >
-          + New Reservation
-        </Button>
-      </Box>
-      <Divider sx={{ mb: 2 }} />
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          mb: 2,
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Filter by date on the left */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <CalendarTodayIcon color="action" />
-          <TextField
-            type="date"
-            size="small"
-            label="Filter by Date"
-            InputLabelProps={{ shrink: true }}
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-          />
-        </Box>
-        {/* Search bar on the right */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <CalendarTodayIcon color="action" />
+            <TextField
+              type="date"
+              size="small"
+              label="Filter by Date"
+              InputLabelProps={{ shrink: true }}
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+            />
+          </Box>
           <TextField
             size="small"
-            label="Search by Name, Email, Phone, Status"
+            label="Search by any field."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ minWidth: 350 }}
+            sx={{ minWidth: 250 }}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -143,11 +121,33 @@ function Reservation() {
               ),
             }}
           />
+          <Button
+            component={Link}
+            to="/new-reservation"
+            variant="outlined"
+            color="primary"
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
+            + New Reservation
+          </Button>
         </Box>
       </Box>
-      <TableContainer component={Paper}>
+      <Divider sx={{ mb: 2 }} />
+
+      <TableContainer
+        component={Paper}
+        sx={{ maxHeight: 550, overflow: "auto" }}
+      >
         <Table size="small">
-          <TableHead>
+          <TableHead
+            sx={{
+              position: "sticky",
+              top: 0,
+              bgcolor: "background.paper",
+              zIndex: 1,
+              height: 50,
+            }}
+          >
             <TableRow>
               <TableCell>
                 <strong>Name</strong>
@@ -187,7 +187,13 @@ function Reservation() {
               </TableRow>
             ) : (
               filteredReservations.map((reservation) => (
-                <TableRow key={reservation.id}>
+                <TableRow
+                  key={reservation.id}
+                  sx={{
+                    "&:hover": { backgroundColor: "#f5f5f5" },
+                    cursor: "pointer",
+                  }}
+                >
                   <TableCell>
                     {reservation.firstName} {reservation.lastName}
                   </TableCell>
@@ -205,7 +211,23 @@ function Reservation() {
                       sx={{ ml: 1 }}
                     />
                   </TableCell>
-                  <TableCell>{reservation.specialRequests || "-"}</TableCell>
+                  <TableCell>
+                    {reservation.specialRequests ? (
+                      <Tooltip
+                        title={reservation.specialRequests}
+                        arrow
+                        placement="top-start"
+                      >
+                        <span>
+                          {reservation.specialRequests.length > 25
+                            ? reservation.specialRequests.slice(0, 25) + "..."
+                            : reservation.specialRequests}
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>
                     {reservation.tableId
                       ? `Table #${reservation.tableId}`

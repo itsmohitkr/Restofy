@@ -103,7 +103,7 @@ function Restaurant() {
   };
 
   return (
-    <div>
+    <Box sx={{ p: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
         <Typography variant="h5" sx={{ color: mainTextColor, flexGrow: 1 }}>
           Restaurants
@@ -111,7 +111,6 @@ function Restaurant() {
         <Button
           variant="outlined"
           onClick={() => navigate("/new-restaurant")}
-          size="small"
           sx={{ textTransform: "none", fontWeight: 600 }}
         >
           + New Restaurant
@@ -351,7 +350,7 @@ function Restaurant() {
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 }
 

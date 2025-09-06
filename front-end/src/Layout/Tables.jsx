@@ -24,7 +24,11 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+
 import { useNavigate } from "react-router-dom";
 
 function getStatusColor(status) {
@@ -40,12 +44,12 @@ function getStatusColor(status) {
   }
 }
 
-
 function Tables() {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { selectedRestaurant } = useContext(RestaurantContext);
   const navigate = useNavigate();
 
@@ -55,7 +59,9 @@ function Tables() {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+            selectedRestaurant.restaurantId
+          }/table`,
           { withCredentials: true }
         );
         setTables(res.data.data || []);
@@ -77,7 +83,9 @@ function Tables() {
     if (!selectedRestaurant) return;
     try {
       await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table/${tableId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
+          selectedRestaurant.restaurantId
+        }/table/${tableId}`,
         { withCredentials: true }
       );
       setTables((prev) => prev.filter((table) => table.id !== tableId));
@@ -102,32 +110,71 @@ function Tables() {
     );
   }
 
+  // Filter tables by search term
+  const filteredTables = tables.filter((table) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      table.tableName?.toLowerCase().includes(term) ||
+      String(table.tableCapacity).includes(term) ||
+      table.tableType?.toLowerCase().includes(term) ||
+      table.tableStatus?.toLowerCase().includes(term)
+    );
+  });
+
   return (
-    <Box sx={{ p: 2, width: "100%" }}>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+    <Box sx={{ p: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Typography variant="h5" gutterBottom sx={{ flexGrow: 1 }}>
           Tables
         </Typography>
-        <Button
-          variant="outlined"
-          onClick={() => navigate("/new-table")}
-          size="small"
-          sx={{ fontWeight: 600, textTransform: "none" }}
-        >
-          + New Table
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <TextField
+            size="small"
+            label="Search by any field."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ minWidth: 250 }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/new-table")}
+            sx={{ fontWeight: 600, textTransform: "none" }}
+          >
+            + New Table
+          </Button>
+        </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
       <TableContainer
         component={Paper}
-        sx={{
-          mt: 2,
-          maxHeight: 580,
-        }}
+        sx={{ maxHeight: 550, overflow: "auto" }}
       >
-        <Table stickyHeader>
-          <TableHead>
+        <Table size="small">
+          <TableHead
+            sx={{
+              position: "sticky",
+              top: 0,
+              bgcolor: "background.paper",
+              zIndex: 1,
+              height: 50,
+            }}
+          >
             <TableRow>
               <TableCell>
                 <strong>Name</strong>
@@ -156,15 +203,21 @@ function Tables() {
                   <CircularProgress />
                 </TableCell>
               </TableRow>
-            ) : tables.length === 0 ? (
+            ) : filteredTables.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center">
                   No tables found.
                 </TableCell>
               </TableRow>
             ) : (
-              tables.map((table) => (
-                <TableRow key={table.id}>
+              filteredTables.map((table) => (
+                <TableRow
+                  key={table.id}
+                  sx={{
+                    "&:hover": { backgroundColor: "#f5f5f5" },
+                    cursor: "pointer",
+                  }}
+                >
                   <TableCell>{table.tableName}</TableCell>
                   <TableCell>{table.tableCapacity}</TableCell>
                   <TableCell>{table.tableType}</TableCell>
@@ -172,7 +225,6 @@ function Tables() {
                     <Chip
                       label={table.tableStatus}
                       color={getStatusColor(table.tableStatus)}
-                      sx={{ fontWeight: 600 }}
                       size="small"
                     />
                   </TableCell>

@@ -90,6 +90,7 @@ function DashboardAnalytics({ restaurant }) {
 
   return (
     <Box sx={{ pb: 4, mb: 8, minHeight: "100vh" }}>
+      <Box >
       <Typography
         variant="h5"
         gutterBottom
@@ -99,7 +100,8 @@ function DashboardAnalytics({ restaurant }) {
           sx={{ mr: 1, verticalAlign: "middle", color: "#43a047" }}
         />
         Restaurant Analytics Dashboard
-      </Typography>
+        </Typography>
+      </Box>
       <Box>
         <Divider sx={{ my: 2 }} />
 

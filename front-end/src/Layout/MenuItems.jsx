@@ -23,10 +23,14 @@ import {
   DialogContentText,
   DialogActions,
   Chip,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+
 
 function MenuItems() {
   const { selectedRestaurant } = useContext(RestaurantContext);
@@ -38,7 +42,20 @@ function MenuItems() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [creatingMenu, setCreatingMenu] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  // Filter menu items by search term
+  const filteredMenuItems = menuItems.filter((item) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      item.itemName?.toLowerCase().includes(term) ||
+      String(item.itemPrice).includes(term) ||
+      item.itemDescription?.toLowerCase().includes(term) ||
+      item.itemCategory?.toLowerCase().includes(term) ||
+      item.itemType?.toLowerCase().includes(term)
+    );
+  });
 
   // Fetch menu for the selected restaurant
   useEffect(() => {
@@ -146,24 +163,43 @@ function MenuItems() {
   }
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
+    <Box sx={{ p: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Typography variant="h5" sx={{ color: mainTextColor, flexGrow: 1 }}>
-          {selectedRestaurant.restaurantName
-            ? `${selectedRestaurant.restaurantName} Menu Items`
-            : "Menu Items"}
+          Menu Items
         </Typography>
-        {menu && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate("/menu-items/new")}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <TextField
             size="small"
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            New Menu Item
-          </Button>
-        )}
+            label="Search by any field."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ minWidth: 250 }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <SearchIcon color="primary" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          {menu && (
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/menu-items/new")}
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            >
+              + New Menu Item
+            </Button>
+          )}
+        </Box>
       </Box>
       <Divider sx={{ mb: 2 }} />
 
@@ -189,9 +225,20 @@ function MenuItems() {
           </Button>
         </Box>
       ) : (
-        <TableContainer component={Paper}>
-          <Table size="medium">
-            <TableHead>
+        <TableContainer
+          component={Paper}
+          sx={{ maxHeight: 550, overflow: "auto" }}
+        >
+          <Table size="small">
+            <TableHead
+              sx={{
+                position: "sticky",
+                top: 0,
+                bgcolor: "background.paper",
+                zIndex: 1,
+                height: 50,
+              }}
+            >
               <TableRow>
                 <TableCell>
                   <strong>Name</strong>
@@ -220,7 +267,7 @@ function MenuItems() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {menuItems.length === 0 ? (
+              {filteredMenuItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} align="center">
                     <Typography color="text.secondary">
@@ -229,7 +276,7 @@ function MenuItems() {
                   </TableCell>
                 </TableRow>
               ) : (
-                menuItems.map((item) => (
+                filteredMenuItems.map((item) => (
                   <TableRow
                     key={item.id}
                     sx={{
@@ -250,7 +297,15 @@ function MenuItems() {
                       {item.itemCategory}
                     </TableCell>
                     <TableCell sx={{ color: labelColor }}>
-                      <Chip label={item.itemType} sx={{ bgcolor: item.itemType === "Veg" ? greenColor : redColor, color: "white" }} size="small" />
+                      <Chip
+                        label={item.itemType}
+                        sx={{
+                          bgcolor:
+                            item.itemType === "Veg" ? greenColor : redColor,
+                          color: "white",
+                        }}
+                        size="small"
+                      />
                     </TableCell>
                     <TableCell sx={{ color: labelColor }}>
                       {item.itemStatus}
@@ -302,7 +357,8 @@ function MenuItems() {
         <DialogTitle>Delete Menu Item</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this menu item? This action cannot be undone.
+            Are you sure you want to delete this menu item? This action cannot
+            be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

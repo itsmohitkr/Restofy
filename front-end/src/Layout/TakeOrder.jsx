@@ -16,7 +16,13 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import { createOrder, getAllMenuItems, getAllOrders, getMenu, updateOrder } from "../utils/api";
+import {
+  createOrder,
+  getAllMenuItems,
+  getAllOrders,
+  getMenu,
+  updateOrder,
+} from "../utils/api";
 
 function TakeOrder() {
   const { reservation } = useOutletContext();
@@ -37,14 +43,20 @@ function TakeOrder() {
       if (!selectedRestaurant) return;
       setLoading(true);
       try {
-        const menuRes = await getMenu({
-          restaurantId: selectedRestaurant.restaurantId
-        }, signal);
+        const menuRes = await getMenu(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+          },
+          signal
+        );
         const menuId = menuRes.data.id;
-        const itemsRes = await getAllMenuItems({
-          restaurantId: selectedRestaurant.restaurantId,
-          menuId
-        }, signal);
+        const itemsRes = await getAllMenuItems(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+            menuId,
+          },
+          signal
+        );
         itemsRes.status === 200
           ? setMenuItems(itemsRes.data)
           : setMenuItems([]);
@@ -97,7 +109,7 @@ function TakeOrder() {
       // Try to get all orders for this reservation
       const ordersRes = await getAllOrders({
         restaurantId: selectedRestaurant.restaurantId,
-        reservationId: reservation.id
+        reservationId: reservation.id,
       });
       existingOrder = (ordersRes.data && ordersRes.data[0]) || null;
     } catch (err) {
@@ -118,36 +130,23 @@ function TakeOrder() {
       })
     );
     console.log("existingOrder:", existingOrder);
-    
 
     try {
       if (existingOrder && existingOrder.status === "Open") {
-        // Update open order
-        // await axios.put(
-        //   `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order/${existingOrder.id}`,
-        //   { orderItems },
-        //   { withCredentials: true }
-        // );
         const updatedOrder = await updateOrder({
           restaurantId: selectedRestaurant.restaurantId,
           reservationId: reservation.id,
           orderId: existingOrder.id,
-          orderItems
+          orderItems,
         });
         if (updatedOrder.status === 200) {
           setSuccess(updatedOrder.message || "Order updated successfully!");
         }
       } else if (!existingOrder) {
-        // Create new order
-        // await axios.post(
-        //   `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order`,
-        //   { orderItems },
-        //   { withCredentials: true }
-        // );
         const newOrder = await createOrder({
           restaurantId: selectedRestaurant.restaurantId,
           reservationId: reservation.id,
-          orderItems
+          orderItems,
         });
         if (newOrder.status === 201) {
           setSuccess("Order placed successfully!");
@@ -160,8 +159,7 @@ function TakeOrder() {
       setTimeout(() => navigate(-1), 1200);
     } catch (err) {
       setError(
-        err.message ||
-          "Failed to place/update order. Please try again."
+        err.message || "Failed to place/update order. Please try again."
       );
     }
     setSubmitting(false);
@@ -172,7 +170,14 @@ function TakeOrder() {
   };
 
   return (
-    <Box sx={{ minWidth: 320, height: '75vh', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        minWidth: 320,
+        height: "75vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Typography variant="h6" sx={{ mb: 2 }}>
         Take Order
       </Typography>
@@ -185,16 +190,12 @@ function TakeOrder() {
         <Typography color="text.secondary">No menu items available.</Typography>
       ) : (
         <>
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', mb: 2 }}>
+          <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", mb: 2 }}>
             <List>
               {menuItems.map((item) => {
                 const isChecked = !!selectedItems[item.id];
                 return (
-                  <ListItem
-                    key={item.id}
-                    divider
-                    sx={{ alignItems: "center" }}
-                  >
+                  <ListItem key={item.id} divider sx={{ alignItems: "center" }}>
                     <Checkbox
                       edge="start"
                       checked={isChecked}
@@ -253,12 +254,12 @@ function TakeOrder() {
               {success}
             </Typography>
           )}
-          <Stack direction="row" spacing={2} sx={{ mt: 2, mb: 1, justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleCancel}
-            >
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ mt: 2, mb: 1, justifyContent: "flex-end" }}
+          >
+            <Button variant="outlined" color="secondary" onClick={handleCancel}>
               Cancel
             </Button>
             <Button

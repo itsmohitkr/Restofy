@@ -34,12 +34,15 @@ function AssignTable() {
     const signal = abortController.signal;
     const fetchAvailableTables = async () => {
       try {
-        const res = await getAvailableTables({
-          restaurantId: selectedRestaurant.restaurantId,
-        }, signal);
+        const res = await getAvailableTables(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+          },
+          signal
+        );
         if (res.status === 200 && (res.data || [])) {
           setAvailableTables(
-            (res.data).filter((table) => table.tableStatus === "Available")
+            res.data.filter((table) => table.tableStatus === "Available")
           );
         }
       } catch (err) {
@@ -61,7 +64,7 @@ function AssignTable() {
     setAssignError("");
     setActionLoading(true);
     try {
-      const res=await assignReservationToTable({
+      const res = await assignReservationToTable({
         restaurantId: selectedRestaurant.restaurantId,
         reservationId,
         tableId: selectedTableId,

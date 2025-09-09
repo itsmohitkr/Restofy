@@ -27,6 +27,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Chip from "@mui/material/Chip";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import {
   cancelReservation,
   deleteReservation,
@@ -143,14 +144,20 @@ function ManageReservation() {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between"}}>
+        <Typography variant="h5" gutterBottom>
+          Manage Reservation
+        </Typography>
       <Button
         variant="outlined"
         onClick={() => navigate("/reservations")}
         sx={{ mb: 2, textTransform: "none", fontWeight: 600 }}
       >
+        <KeyboardArrowLeftIcon sx={{ mr: 1 }} />
         Back to Reservations
       </Button>
+      </Box>
       <Divider sx={{ mb: 2 }} />
       <Stack
         direction={{ xs: "column", md: "row" }}

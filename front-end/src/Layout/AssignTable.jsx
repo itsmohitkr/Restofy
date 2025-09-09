@@ -13,9 +13,10 @@ import GroupIcon from "@mui/icons-material/Group";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import axios from "axios";
+import { assignReservationToTable, getAvailableTables } from "../utils/api";
 
 function AssignTable() {
-      const { reservation, setReservation } = useOutletContext();
+  const { reservation, setReservation } = useOutletContext();
 
   const { reservationId } = useParams();
   const { selectedRestaurant } = useContext(RestaurantContext);
@@ -30,25 +31,26 @@ function AssignTable() {
   useEffect(() => {
     if (!selectedRestaurant) return;
     setLoadingTables(true);
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchAvailableTables = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table`,
-          { withCredentials: true }
-        );
-        setAvailableTables(
-          (res.data.data || []).filter(
-            (table) => table.tableStatus === "Available"
-          )
-        );
+        const res = await getAvailableTables({
+          restaurantId: selectedRestaurant.restaurantId,
+        }, signal);
+        if (res.status === 200 && (res.data || [])) {
+          setAvailableTables(
+            (res.data).filter((table) => table.tableStatus === "Available")
+          );
+        }
       } catch (err) {
-          setAvailableTables([]);
-          setAssignError("Failed to fetch available tables.");
-          console.log(err);
+        setAvailableTables([]);
+        setAssignError(err.message || "Failed to fetch available tables.");
       }
       setLoadingTables(false);
     };
     fetchAvailableTables();
+    return () => abortController.abort();
   }, [selectedRestaurant]);
 
   const handleAssignTable = async () => {
@@ -60,19 +62,24 @@ function AssignTable() {
     setAssignError("");
     setActionLoading(true);
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/assign-table?tableId=${selectedTableId}`,
-        {},
-        { withCredentials: true }
-      );
-      setAssignSuccess("Table assigned successfully!");
-        setTimeout(() => navigate(`/reservations/${reservationId}/manage`), 500);
+      const res=await assignReservationToTable({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId,
+        tableId: selectedTableId,
+      });
+      if (res.status === 200) {
+        setAssignSuccess(res.message || "Table assigned successfully!");
+      }
+      setTimeout(() => navigate(`/reservations/${reservationId}/manage`), 500);
 
-        setReservation({ ...reservation, tableId: selectedTableId, status: 'Seated' });
+      setReservation({
+        ...reservation,
+        tableId: selectedTableId,
+        status: "Seated",
+      });
     } catch (err) {
-      setAssignError("Failed to assign table.");
+      setAssignError(err.message || "Failed to assign table.");
       setAssignSuccess("");
-      console.log(err);
     }
     setActionLoading(false);
   };
@@ -105,9 +112,12 @@ function AssignTable() {
                     borderWidth: isSelected ? 2 : 1,
                     borderRadius: 2,
                     boxShadow: isSelected ? 2 : 0,
-                    backgroundColor: isSelected ? "action.hover" : "background.paper",
+                    backgroundColor: isSelected
+                      ? "action.hover"
+                      : "background.paper",
                     cursor: "pointer",
-                    transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
+                    transition:
+                      "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
                     p: 2,
                     position: "relative",
                     minWidth: 220,
@@ -115,7 +125,13 @@ function AssignTable() {
                   onClick={() => setSelectedTableId(table.id)}
                 >
                   {/* Top Row */}
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
                     {/* Top Left: Table Name */}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <TableRestaurantIcon fontSize="small" />
@@ -129,14 +145,23 @@ function AssignTable() {
                     </Typography>
                   </Box>
                   {/* Middle: Capacity */}
-                  <Box sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", mt: 1, mb: 1 }}
+                  >
                     <GroupIcon fontSize="small" sx={{ mr: 0.5 }} />
                     <Typography variant="body2">
                       Capacity: {table.tableCapacity}
                     </Typography>
                   </Box>
                   {/* Bottom Row */}
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mt: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-end",
+                      mt: 2,
+                    }}
+                  >
                     {/* Bottom Left: Table Name (optional) */}
                     <Typography variant="caption" color="text.secondary">
                       {table.tableName}
@@ -147,7 +172,7 @@ function AssignTable() {
                         <Button
                           variant="outlined"
                           size="small"
-                          onClick={e => {
+                          onClick={(e) => {
                             e.stopPropagation();
                             setSelectedTableId("");
                             setAssignError("");
@@ -161,11 +186,13 @@ function AssignTable() {
                           variant="contained"
                           color="primary"
                           size="small"
-                          onClick={e => {
+                          onClick={(e) => {
                             e.stopPropagation();
                             handleAssignTable();
                           }}
-                          disabled={!selectedTableId || assignSuccess || actionLoading}
+                          disabled={
+                            !selectedTableId || assignSuccess || actionLoading
+                          }
                         >
                           Confirm
                         </Button>

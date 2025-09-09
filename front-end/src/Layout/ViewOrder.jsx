@@ -29,7 +29,15 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import { useParams, useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import axios from "axios";
+import {
+  getOrderForReservation,
+  getMenu,
+  getAllMenuItems,
+  getBillForOrder,
+  generateBillForOrder,
+  makePaymentForBill,
+  finalizeOrder,
+} from "../utils/api";
 
 function ViewOrder() {
   const { reservationId } = useParams();
@@ -53,25 +61,24 @@ function ViewOrder() {
       setError("");
       try {
         // Fetch the latest order for this reservation
-        const orderRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/order`,
-          { withCredentials: true }
-        );
-        const fetchedOrder = orderRes.data.data[0] || null;
+        const orderRes = await getOrderForReservation({
+          restaurantId: selectedRestaurant.restaurantId,
+          reservationId,
+        });
+        const fetchedOrder = (orderRes.data && orderRes.data[0]) || null;
         setOrder(fetchedOrder);
 
         // Fetch all menu items for name lookup
-        const menuRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-          { withCredentials: true }
-        );
-        const menuId = menuRes.data.data.id;
-        const itemsRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menuId}/menuItem`,
-          { withCredentials: true }
-        );
+        const menuRes = await getMenu({
+          restaurantId: selectedRestaurant.restaurantId,
+        });
+        const menuId = menuRes.data.id;
+        const itemsRes = await getAllMenuItems({
+          restaurantId: selectedRestaurant.restaurantId,
+          menuId,
+        });
         const map = {};
-        (itemsRes.data.data || []).forEach((item) => {
+        (itemsRes.data || []).forEach((item) => {
           map[item.id] = item.itemName;
         });
         setMenuItemsMap(map);
@@ -79,14 +86,15 @@ function ViewOrder() {
         // If order is billed or paid, fetch the bill
         if (fetchedOrder && (fetchedOrder.status === "Billed" || fetchedOrder.status === "Paid")) {
           try {
-            const billRes = await axios.get(
-              `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/order/${fetchedOrder.id}/bill`,
-              { withCredentials: true }
-            );
+            const billRes = await getBillForOrder({
+              restaurantId: selectedRestaurant.restaurantId,
+              reservationId,
+              orderId: fetchedOrder.id,
+            });
             // If your API returns an array, use the latest bill
-            const billData = Array.isArray(billRes.data.data)
-              ? billRes.data.data[billRes.data.data.length - 1]
-              : billRes.data.data;
+            const billData = Array.isArray(billRes.data)
+              ? billRes.data[billRes.data.length - 1]
+              : billRes.data;
             setBill(billData);
           } catch {
             setBill(null);
@@ -96,8 +104,8 @@ function ViewOrder() {
         }
       } catch (err) {
         setOrder(null);
-          setError("Failed to fetch order details.");
-          console.log(err); 
+        setError("Failed to fetch order details.");
+        console.log(err);
       }
       setLoading(false);
     };
@@ -110,20 +118,19 @@ function ViewOrder() {
     setActionLoading(true);
     setError("");
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/order/${order.id}/complete`,
-        {},
-        { withCredentials: true }
-      );
+      const res = await finalizeOrder({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId,
+        orderId: order.id,
+      });
       setOrder((prev) => ({
         ...prev,
-        ...res.data.data,
+        ...res.data,
       }));
       setSuccess("Order finalized successfully!");
     } catch (err) {
-        setError("Failed to finalize order.");
-        console.log(err);
-
+      setError("Failed to finalize order.");
+      console.log(err);
     }
     setActionLoading(false);
   };
@@ -135,21 +142,20 @@ function ViewOrder() {
     setError("");
     try {
       // Generate bill
-      const billRes = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/order/${order.id}/bill`,
-        {},
-        { withCredentials: true }
-      );
+      const billRes = await generateBillForOrder({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId,
+        orderId: order.id,
+      });
       setOrder((prev) => ({
         ...prev,
         status: "Billed",
       }));
-      setBill(billRes.data.data); // Store bill details including bill.id
+      setBill(billRes.data); // Store bill details including bill.id
       setSuccess("Bill generated successfully!");
     } catch (err) {
-        setError("Failed to generate bill.");
-        console.log(err);
-
+      setError("Failed to generate bill.");
+      console.log(err);
     }
     setActionLoading(false);
   };
@@ -160,11 +166,13 @@ function ViewOrder() {
     setActionLoading(true);
     setError("");
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}/order/${order.id}/bill/${bill.id}/payment`,
-        { paymentMethod },
-        { withCredentials: true }
-      );
+      await makePaymentForBill({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId,
+        orderId: order.id,
+        billId: bill.id,
+        paymentMethod,
+      });
       setOrder((prev) => ({
         ...prev,
         status: "Paid",
@@ -172,9 +180,8 @@ function ViewOrder() {
       setSuccess("Payment completed successfully!");
       setPaymentDialogOpen(false);
     } catch (err) {
-        setError("Failed to process payment.");
-        console.log(err);
-
+      setError("Failed to process payment.");
+      console.log(err);
     }
     setActionLoading(false);
   };

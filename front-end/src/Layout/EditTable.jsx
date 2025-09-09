@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import TableForm from "./TableForm";
 import { RestaurantContext } from "../Context/RestaurantContext";
-
+import { getTableById, updateTable } from "../utils/api";
 function EditTable() {
   const { tableId } = useParams();
   const [form, setForm] = useState({
@@ -18,27 +18,38 @@ function EditTable() {
   const { selectedRestaurant } = useContext(RestaurantContext);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchTable = async () => {
       if (!selectedRestaurant) return;
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table/${tableId}`,
-          { withCredentials: true }
+       
+        const res = await getTableById(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+            tableId,
+          },
+          signal
         );
-        if (res.data && res.data.data) {
+
+        if (res.status === 200 && res.data) {
           setForm({
-            tableName: res.data.data.tableName || "",
-            tableCapacity: res.data.data.tableCapacity?.toString() || "",
-            tableType: res.data.data.tableType || "Regular",
+            tableName: res.data.tableName || "",
+            tableCapacity: res.data.tableCapacity?.toString() || "",
+            tableType: res.data.tableType || "Regular"
           });
         }
       } catch (err) {
+        if (err.error && err.status === 400) {
+          setError(err.message || "Invalid data provided.");
+        }
+        else {
           setError("Failed to fetch table details.");
-          console.log(err);
+        }
       }
     };
     fetchTable();
-  }, [selectedRestaurant, tableId]);
+  }, [selectedRestaurant, tableId]);  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,26 +74,22 @@ function EditTable() {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table/${tableId}`,
-        {
+      const res= await updateTable({
+        restaurantId: selectedRestaurant.restaurantId,
+        tableId,
+        data: {
           ...form,
           tableCapacity: Number(form.tableCapacity),
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      });
+      
       if (res.status === 200) {
         setSuccess("Table updated successfully!");
         setTimeout(() => navigate("/tables"), 1000);
       }
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        setError(err.response.data?.message || "Invalid data provided.");
+      if (err.error && err.status === 400) {
+        setError(err.message || "Invalid data provided.");
       } else {
         setError("Failed to update table.");
       }

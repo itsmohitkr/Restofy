@@ -1,21 +1,19 @@
-class ResponseBody{
-    constructor(status, message, data, error) {
-        this.status = status;
-        this.message = message;
-        this.data = data;
-        this.error = error || null;
-    }
+class ResponseBody {
+  constructor(success, message, data, error) {
+    this.success = success;
+    this.message = message;
+    this.data = data;
+    this.error = error || null;
+  }
 }
-const successResponse = (status, message, data) => {
-    return new ResponseBody(status, message, data, null);
-    
+const successResponse = (message, data) => {
+  return new ResponseBody(true, message, data, null);
 };
-const errorResponse = (status, message, error) => {
-    return new ResponseBody(status, message, null, error);
+const errorResponse = (message, error) => {
+  return new ResponseBody(false, message, null, error);
 };
 
 module.exports = {
-    successResponse,
-    errorResponse
+  successResponse,
+  errorResponse,
 };
-

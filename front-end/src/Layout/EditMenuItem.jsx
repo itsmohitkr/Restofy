@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import MenuItemForm from "./MenuItemForm";
+import { getMenu, getMenuItemById, updateMenuItem } from "../utils/api";
 
 function EditMenuItem() {
   const { menuItemId } = useParams();
@@ -23,27 +24,33 @@ function EditMenuItem() {
 
   // Fetch menu and menu item on mount
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchMenuAndItem = async () => {
       if (!selectedRestaurant) return;
-      try {
-        const menuRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-          { withCredentials: true }
-        );
-        setMenu(menuRes.data.data);
 
-        const itemRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menuRes.data.data.id}/menuItem/${menuItemId}`,
-          { withCredentials: true }
+      try {
+        const menuRes = await getMenu(
+          { restaurantId: selectedRestaurant.restaurantId },
+          signal
         );
-        const item = itemRes.data.data;
+        setMenu(menuRes.data);
+
+        const itemRes = await getMenuItemById(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+            menuId: menuRes.data.id,
+            menuItemId,
+          },
+          signal
+        );
         setForm({
-          itemName: item.itemName || "",
-          itemDescription: item.itemDescription || "",
-          itemPrice: item.itemPrice?.toString() || "",
-          itemCategory: item.itemCategory || "General",
-          itemType: item.itemType || "",
-          itemStatus: item.itemStatus || "Available",
+          itemName: itemRes.data.itemName || "",
+          itemDescription: itemRes.data.itemDescription || "",
+          itemPrice: itemRes.data.itemPrice?.toString() || "",
+          itemCategory: itemRes.data.itemCategory || "General",
+          itemType: itemRes.data.itemType || "",
+          itemStatus: itemRes.data.itemStatus || "Available",
         });
       } catch (err) {
         setError("Failed to fetch menu item.");
@@ -51,6 +58,7 @@ function EditMenuItem() {
       }
     };
     fetchMenuAndItem();
+    return () => abortController.abort();
   }, [selectedRestaurant, menuItemId]);
 
   const handleInputChange = (e) => {
@@ -72,23 +80,21 @@ function EditMenuItem() {
     }
     setIsSubmitting(true);
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem/${menuItemId}`,
-        {
+      const res = await updateMenuItem({
+        restaurantId: selectedRestaurant.restaurantId,
+        menuId: menu.id,
+        menuItemId,
+        data: {
           ...form,
           itemPrice: Number(form.itemPrice),
         },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
-      setSuccess("Menu item updated!");
-      setTimeout(() => navigate("/menu-items"), 1200);
+      });
+      if(res.status === 200) {
+        setSuccess("Menu item updated!");
+        setTimeout(() => navigate("/menu-items"), 1200);
+      }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to update menu item."
-      );
+      setError(err.message || "Failed to update menu item.");
       setSuccess("");
     }
     setIsSubmitting(false);

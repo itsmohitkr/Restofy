@@ -17,6 +17,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Link } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import { Chip, Stack, InputAdornment, Tooltip } from "@mui/material";
+import { getAllReservations } from "../utils/api";
 
 function getStatusColor(status) {
   switch (status) {
@@ -40,22 +41,24 @@ function Reservation() {
   const { selectedRestaurant } = useContext(RestaurantContext);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchReservations = async () => {
       try {
         if (!selectedRestaurant) return;
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-            selectedRestaurant.restaurantId
-          }/reservations`,
-          { withCredentials: true }
-        );
-        setReservations(res.data.data || []);
+        const res = await getAllReservations({
+          restaurantId: selectedRestaurant.restaurantId 
+        }, signal);
+        
+        setReservations(res.data || []);
       } catch (err) {
         setReservations([]);
         console.log(err);
       }
     };
     fetchReservations();
+    return () => controller.abort();
   }, [selectedRestaurant]);
 
   // Real-time search and filter

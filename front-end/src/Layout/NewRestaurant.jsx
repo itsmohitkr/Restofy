@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import RestaurantForm from "./RestaurantForm";
+import { createNewRestaurant } from "../utils/api";
 
 function NewRestaurant() {
   const [form, setForm] = useState({
@@ -37,22 +38,14 @@ function NewRestaurant() {
     setError("");
     setIsSubmitting(true);
     try {
-      const restaurantData = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants`,
-        form,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+    
+      const restaurantData = await createNewRestaurant(form);
       if (restaurantData.status === 201) {
         navigate("/restaurant");
       }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError(error.response.data?.message || "Invalid data provided.");
+    } catch (err) {
+      if (err.error && err.status === 400) {
+        setError(`${err.error} : ${err.message}`);
       } else {
         setError("Failed to register restaurant.");
       }

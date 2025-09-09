@@ -30,6 +30,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 
 import { useNavigate } from "react-router-dom";
+import { deleteTable, getAllTables } from "../utils/api";
 
 function getStatusColor(status) {
   switch (status) {
@@ -56,15 +57,18 @@ function Tables() {
   useEffect(() => {
     const fetchTables = async () => {
       if (!selectedRestaurant) return;
+      const abortController = new AbortController();
+      const signal = abortController.signal;
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-            selectedRestaurant.restaurantId
-          }/table`,
-          { withCredentials: true }
+        const res = await getAllTables(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+          },
+          signal
         );
-        setTables(res.data.data || []);
+
+        res.status === 200 && res.data ? setTables(res.data) : setTables([]);
       } catch (err) {
         setTables([]);
         console.log(err);
@@ -82,15 +86,12 @@ function Tables() {
   const handleDelete = async (tableId) => {
     if (!selectedRestaurant) return;
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-          selectedRestaurant.restaurantId
-        }/table/${tableId}`,
-        { withCredentials: true }
-      );
+      await deleteTable({
+        restaurantId: selectedRestaurant.restaurantId,
+        tableId,
+      });
       setTables((prev) => prev.filter((table) => table.id !== tableId));
     } catch (err) {
-      // Optionally show error
       console.error("Error deleting table:", err);
     }
   };

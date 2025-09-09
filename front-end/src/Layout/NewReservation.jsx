@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import ReservationForm from "./ReservationForm";
+import { createNewReservation } from "../utils/api";
 
 function NewReservation() {
   const [form, setForm] = useState({
@@ -48,21 +49,18 @@ function NewReservation() {
     setIsSubmitting(true);
     try {
       const reservationTimeISO = new Date(form.reservationTime).toISOString();
-      const reservationData = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations`,
-        {
+
+      const reservationResponse = await createNewReservation({
+        restaurantId: selectedRestaurant.restaurantId,
+        data: {
           ...form,
           numberOfGuests: Number(form.numberOfGuests),
           reservationTime: reservationTimeISO,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      if (reservationData.status === 201) {
+      });
+      console.log(reservationResponse);
+      
+      if (reservationResponse.status === 201) {
         setSuccess("Reservation created successfully!");
         setForm({
           firstName: "",
@@ -75,9 +73,11 @@ function NewReservation() {
         });
         setTimeout(() => navigate("/reservations"), 1200);
       }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError(error.response.data?.message || "Invalid data provided.");
+    } catch (err) {
+      console.log(err);
+
+      if (err.error && err.status === 400) {
+        setError(`${err.error} : ${err.message}`);
       } else {
         setError("Failed to create reservation.");
       }

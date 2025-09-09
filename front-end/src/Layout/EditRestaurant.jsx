@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import RestaurantForm from "./RestaurantForm";
 import { RestaurantContext } from "../Context/RestaurantContext";
+import { getRestaurantById, updateRestaurant } from "../utils/api";
 
 function EditRestaurant() {
   const { restaurantId } = useParams();
@@ -20,28 +21,33 @@ function EditRestaurant() {
 
   useEffect(() => {
     // Fetch restaurant details for editing
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchRestaurant = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurantId}`,
-          { withCredentials: true }
-        );
-        if (res.data && res.data.data) {
+
+        const res = await getRestaurantById({ restaurantId }, signal);
+        if (res.status === 200 && res.data) {
           setForm({
-            restaurantName: res.data.data.restaurantName || "",
-            restaurantLocation: res.data.data.restaurantLocation || "",
-            restaurantEmail: res.data.data.restaurantEmail || "",
-            restaurantPhoneNumber: res.data.data.restaurantPhoneNumber || "",
-            restaurantDescription: res.data.data.restaurantDescription || "",
-            restaurantAddress: res.data.data.restaurantAddress || "",
+            restaurantName: res.data.restaurantName || "",
+            restaurantLocation: res.data.restaurantLocation || "",
+            restaurantEmail: res.data.restaurantEmail || "",
+            restaurantPhoneNumber: res.data.restaurantPhoneNumber || "",
+            restaurantDescription: res.data.restaurantDescription || "",
+            restaurantAddress: res.data.restaurantAddress || "",
           });
         }
       } catch (err) {
+        if (err.error) {
+          setError(`${err.error} : ${err.message}`);
+        } else {
           setError("Failed to fetch restaurant details.");
-          console.log(err);
+        }
+        console.log(err);
       }
     };
     fetchRestaurant();
+    return () => abortController.abort();
   }, [restaurantId]);
 
   const handleInputChange = (e) => {
@@ -65,22 +71,18 @@ function EditRestaurant() {
     setError("");
     setIsSubmitting(true);
     try {
-      const restaurantData = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurantId}`,
-        form,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+
+      const restaurantData = await updateRestaurant({
+        restaurantId,
+        data: { ...form },
+      });
+
       if (restaurantData.status === 200) {
         navigate("/restaurant");
       }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError(error.response.data?.message || "Invalid data provided.");
+    } catch (err) {
+      if (err.error && err.status === 400) {
+        setError(err.message || "Invalid data provided.");
       } else {
         setError("Failed to update restaurant.");
       }

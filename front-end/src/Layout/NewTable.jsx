@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import TableForm from "./TableForm";
+import { createNewTable } from "../utils/api";
 
 function NewTable() {
   const [form, setForm] = useState({
@@ -39,22 +40,13 @@ function NewTable() {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/table`,
-        {
-          ...form,
-          tableCapacity: Number(form.tableCapacity),
-          tableStatus: "Available",
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+    
+      const res= await createNewTable({
+        restaurantId: selectedRestaurant.restaurantId,
+        data:{...form, tableCapacity: Number(form.tableCapacity), tableStatus: "Available"}
+      });
       if (res.status === 201) {
-        setSuccess("Table created successfully!");
+        setSuccess(res.message || "Table created successfully!");
         setForm({
           tableName: "",
           tableCapacity: "",
@@ -63,10 +55,10 @@ function NewTable() {
         setTimeout(() => navigate("/tables"), 1000);
       }
     } catch (err) {
-      if (err.response && err.response.status === 400) {
-        setError(err.response.data?.message || "Invalid data provided.");
+      if (err.error && err.status === 400) {
+        setError(err.message || "Invalid data provided.");
       } else {
-        setError("Failed to create table.");
+        setError(err.message || "Failed to create table.");
       }
       setSuccess("");
     }

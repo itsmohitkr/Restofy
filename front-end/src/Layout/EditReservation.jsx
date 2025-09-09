@@ -3,10 +3,11 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import ReservationForm from "./ReservationForm";
+import { getReservationById, updateReservation } from "../utils/api";
 
 function EditReservation() {
   const { reservationId } = useParams();
-        const { reservation, setReservation } = useOutletContext();
+  const { reservation, setReservation } = useOutletContext();
 
   const [form, setForm] = useState({
     firstName: "",
@@ -24,35 +25,38 @@ function EditReservation() {
   const { selectedRestaurant } = useContext(RestaurantContext);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchReservation = async () => {
       if (!selectedRestaurant) return;
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}`,
-          { withCredentials: true }
+        const res = await getReservationById(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+            reservationId,
+          },
+          signal
         );
-        if (res.data && res.data.data) {
-            const r = res.data.data;
-            console.log(r);
-            
+
+        if (res.status === 200 && res.data) {
           setForm({
-            firstName: r.firstName || "",
-            lastName: r.lastName || "",
-            email: r.email || "",
-            contact: r.contact || "",
-            numberOfGuests: r.numberOfGuests?.toString() || "",
-            specialRequests: r.specialRequests || "",
-            reservationTime: r.reservationTime
-              ? toLocalDatetimeInputValue(r.reservationTime)
+            firstName: res.data.firstName || "",
+            lastName: res.data.lastName || "",
+            email: res.data.email || "",
+            contact: res.data.contact || "",
+            numberOfGuests: res.data.numberOfGuests?.toString() || "",
+            specialRequests: res.data.specialRequests || "",
+            reservationTime: res.data.reservationTime
+              ? toLocalDatetimeInputValue(res.data.reservationTime)
               : "",
           });
         }
       } catch (err) {
-          setError("Failed to fetch reservation details.");
-          console.log(err);
+        setError(err.message || "Failed to fetch reservation details.");
       }
     };
     fetchReservation();
+    return () => abortController.abort();
   }, [selectedRestaurant, reservationId]);
 
   const handleInputChange = (e) => {
@@ -83,22 +87,19 @@ function EditReservation() {
     setIsSubmitting(true);
     try {
       const reservationTimeISO = new Date(form.reservationTime).toISOString();
-      const reservationData = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservationId}`,
-        {
+      
+      const reservationResponse = await updateReservation({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId,
+        data: {
           ...form,
           numberOfGuests: Number(form.numberOfGuests),
           reservationTime: reservationTimeISO,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      if (reservationData.status === 200) {
-        setSuccess("Reservation updated successfully!");
+      });
+
+      if (reservationResponse.status === 200) {
+        setSuccess(reservationResponse.message || "Reservation updated successfully!");
         setTimeout(
           () => navigate(`/reservations/${reservationId}/manage`),
           500
@@ -109,9 +110,9 @@ function EditReservation() {
           ...form,
         });
       }
-    } catch (error) {
-      if (error.response && error.response.status === 400) {
-        setError(error.response.data?.message || "Invalid data provided.");
+    } catch (err) {
+      if (err.error && err.status === 400) {
+        setError(err.message || "Invalid data provided.");
       } else {
         setError("Failed to update reservation.");
       }

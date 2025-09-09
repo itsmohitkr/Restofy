@@ -17,6 +17,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import axios from "axios";
+import { createOrder, getAllMenuItems, getAllOrders, getMenu, updateOrder } from "../utils/api";
 
 function TakeOrder() {
   const { reservation } = useOutletContext();
@@ -30,29 +31,33 @@ function TakeOrder() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!selectedRestaurant || !reservation) return;
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchMenuItems = async () => {
       if (!selectedRestaurant) return;
       setLoading(true);
       try {
-        const menuRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-          { withCredentials: true }
-        );
-        const menuId = menuRes.data.data.id;
-        const itemsRes = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menuId}/menuItem`,
-          { withCredentials: true }
-        );
-        setMenuItems(itemsRes.data.data || []);
+        const menuRes = await getMenu({
+          restaurantId: selectedRestaurant.restaurantId
+        }, signal);
+        const menuId = menuRes.data.id;
+        const itemsRes = await getAllMenuItems({
+          restaurantId: selectedRestaurant.restaurantId,
+          menuId
+        }, signal);
+        itemsRes.status === 200
+          ? setMenuItems(itemsRes.data)
+          : setMenuItems([]);
       } catch (err) {
         setMenuItems([]);
-          setError("Failed to fetch menu items.");
-          console.log(err);
+        setError(err.message || "Failed to fetch menu items.");
+        console.log(err);
       }
       setLoading(false);
     };
     fetchMenuItems();
-  }, [selectedRestaurant]);
+  }, [selectedRestaurant, reservation]);
 
   const handleToggle = (itemId) => {
     setSelectedItems((prev) =>
@@ -91,17 +96,17 @@ function TakeOrder() {
     let existingOrder = null;
     try {
       // Try to get all orders for this reservation
-      const ordersRes = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order`,
-        { withCredentials: true }
-      );
-      existingOrder = (ordersRes.data.data && ordersRes.data.data[0]) || null;
+      const ordersRes = await getAllOrders({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId: reservation.id
+      });
+      existingOrder = (ordersRes.data && ordersRes.data[0]) || null;
     } catch (err) {
       // If 404, treat as no existing order
-      if (err.response?.status === 404) {
+      if (err.status === 404) {
         existingOrder = null;
       } else {
-        setError("Failed to check existing orders.");
+        setError(err.message || "Failed to check existing orders.");
         setSubmitting(false);
         return;
       }
@@ -113,24 +118,41 @@ function TakeOrder() {
         quantity,
       })
     );
+    console.log("existingOrder:", existingOrder);
+    
 
     try {
       if (existingOrder && existingOrder.status === "Open") {
         // Update open order
-        await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order/${existingOrder.id}`,
-          { orderItems },
-          { withCredentials: true }
-        );
-        setSuccess("Order updated successfully!");
+        // await axios.put(
+        //   `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order/${existingOrder.id}`,
+        //   { orderItems },
+        //   { withCredentials: true }
+        // );
+        const updatedOrder = await updateOrder({
+          restaurantId: selectedRestaurant.restaurantId,
+          reservationId: reservation.id,
+          orderId: existingOrder.id,
+          orderItems
+        });
+        if (updatedOrder.status === 200) {
+          setSuccess(updatedOrder.message || "Order updated successfully!");
+        }
       } else if (!existingOrder) {
         // Create new order
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order`,
-          { orderItems },
-          { withCredentials: true }
-        );
-        setSuccess("Order placed successfully!");
+        // await axios.post(
+        //   `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/reservations/${reservation.id}/order`,
+        //   { orderItems },
+        //   { withCredentials: true }
+        // );
+        const newOrder = await createOrder({
+          restaurantId: selectedRestaurant.restaurantId,
+          reservationId: reservation.id,
+          orderItems
+        });
+        if (newOrder.status === 201) {
+          setSuccess("Order placed successfully!");
+        }
       } else {
         setError("Cannot create or update order. Existing order is not open.");
         setSubmitting(false);
@@ -139,7 +161,7 @@ function TakeOrder() {
       setTimeout(() => navigate(-1), 1200);
     } catch (err) {
       setError(
-        err.response?.data?.message ||
+        err.message ||
           "Failed to place/update order. Please try again."
       );
     }

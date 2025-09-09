@@ -1,7 +1,15 @@
-# Restofy Backend
+# Restofy - Restaurant Management Platform
 
-## Overview
-Restofy is a robust, production-ready restaurant management backend built with Node.js, Express, Prisma ORM, and PostgreSQL. It provides secure, scalable APIs for restaurant owners to manage restaurants, tables, menus, reservations, and staff, with authentication, RBAC, validation, and logging.
+## 🍽️ Overview
+Restofy is a comprehensive, production-ready restaurant management platform built with modern technologies. It provides a complete solution for restaurant owners to manage their operations, including reservations, orders, payments, staff, and analytics.
+
+## 🏗️ Architecture
+- **Frontend**: React 19 with Material-UI, Vite build system
+- **Backend**: Node.js/Express.js with Domain-Driven Design (DDD) architecture
+- **Notification Service**: Event-driven microservice with RabbitMQ
+- **Database**: PostgreSQL with Prisma ORM
+- **Message Broker**: RabbitMQ for asynchronous communication
+- **Authentication**: JWT-based with role-based access control (RBAC)
 
 ---
 
@@ -15,6 +23,113 @@ Restofy is a robust, production-ready restaurant management backend built with N
 - **Testing**: Jest and Supertest for unit and integration tests
 - **Prisma ORM**: Type-safe DB access and migrations
 - **Extensible**: Modular Domain-Driven Design architecture
+
+---
+
+## 📁 Project Structure
+
+```
+Restofy/
+├── back-end/                          # Node.js/Express Backend API
+│   ├── src/
+│   │   ├── domains/                   # Business Domains (DDD)
+│   │   │   ├── analytics/             # Analytics & Reporting
+│   │   │   ├── authentication/        # User Authentication
+│   │   │   ├── bill/                  # Bill Management
+│   │   │   ├── menu/                  # Menu Management
+│   │   │   ├── menuItem/              # Menu Item Management
+│   │   │   ├── order/                 # Order Management
+│   │   │   ├── payment/               # Payment Processing
+│   │   │   ├── profile/               # User Profile Management
+│   │   │   ├── reservation/           # Reservation Management
+│   │   │   ├── restaurant/            # Restaurant Management
+│   │   │   ├── tables/                # Table Management
+│   │   │   └── user/                  # User Management
+│   │   ├── infrastructure/            # External Dependencies
+│   │   │   ├── database/
+│   │   │   │   ├── prisma/
+│   │   │   │   └── redis/
+│   │   │   ├── external-services/
+│   │   │   └── monitoring/
+│   │   ├── routes/                    # API Routing Layer
+│   │   │   ├── index.js               # Main router
+│   │   │   └── v1/
+│   │   │       └── index.js           # V1 API routes
+│   │   ├── shared/                    # Shared Components
+│   │   │   ├── error/                 # Error Handling
+│   │   │   ├── jobs/                  # Background Jobs
+│   │   │   ├── middleware/            # Express Middleware
+│   │   │   ├── queues/                # Message Queues
+│   │   │   ├── security/              # Security Middleware
+│   │   │   └── services/              # Shared Services
+│   │   ├── utils/                     # Utilities
+│   │   │   ├── constants/
+│   │   │   ├── helper/
+│   │   │   ├── logger.js
+│   │   │   └── validation/            # Joi Validation Schemas
+│   │   ├── admin/                     # Admin Panel
+│   │   ├── app.js                     # Express App Setup
+│   │   └── server.js                  # Server Entry Point
+│   ├── tests/                         # Test Files
+│   ├── logs/                          # Winston Log Files
+│   ├── assests/                       # Assets
+│   ├── .dockerignore
+│   ├── .gitignore
+│   ├── BLOCKERS.md                    # Development Notes
+│   ├── LEARNING_GUIDE.md              # Learning Resources
+│   ├── future.md                      # Future Plans
+│   ├── env.example                    # Environment Template
+│   ├── jest.config.js                 # Jest Configuration
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── dockerfile                     # Docker Configuration
+│   └── README.md
+│
+├── front-end/                         # React Frontend Application
+│   ├── src/
+│   │   ├── AuthPage/                  # Authentication Pages
+│   │   ├── Component/                 # Reusable Components
+│   │   ├── Context/                   # React Context Providers
+│   │   ├── Layout/                    # Page Layouts & Components
+│   │   ├── assets/                    # Static Assets
+│   │   ├── App.css
+│   │   ├── App.jsx                    # Main App Component
+│   │   └── main.jsx                   # React Entry Point
+│   ├── public/                        # Public Assets
+│   ├── .dockerignore
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── README.md
+│   ├── dockerfile                     # Docker Configuration
+│   ├── nginx.conf                     # Nginx Configuration
+│   └── vite.config.js                 # Vite Configuration
+│
+├── notification-service/              # Event-Driven Notification Service
+│   ├── src/
+│   │   ├── channel/                   # Notification Channels
+│   │   ├── dispatcher/                # Message Dispatcher
+│   │   ├── jobs/                      # Background Job Processors
+│   │   ├── queues/                    # Message Queue Setup
+│   │   ├── services/                  # Business Services
+│   │   ├── utils/                     # Utilities
+│   │   └── index.js                   # Service Entry Point
+│   ├── prisma/                        # Database Schema
+│   ├── .dockerignore
+│   ├── .gitignore
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── README.md
+│   ├── dockerfile                     # Docker Configuration
+│   └── test.js
+│
+├── docker-compose.yml                 # Multi-Service Orchestration
+├── package.json                       # Root Package Configuration
+├── package-lock.json
+└── README.md                          # This File
+```
 
 ---
 
@@ -155,13 +270,41 @@ The project follows DDD principles with clear separation of concerns:
 
 ---
 
-## Technologies Used
-- **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL with Prisma ORM
-- **Validation**: Joi validation schemas
-- **Authentication**: JWT (JSON Web Tokens)
-- **Security**: express-rate-limit, CORS
-- **Testing**: Jest, Supertest (planned)
+## 🛠️ Technologies Used
+
+### Backend
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js 5.1.0
+- **Database**: PostgreSQL with Prisma ORM 6.11.1
+- **Authentication**: JWT (jsonwebtoken 9.0.2)
+- **Validation**: Joi 17.13.3
+- **Security**: bcrypt 6.0.0, express-rate-limit 7.5.1
+- **Message Queue**: RabbitMQ (amqplib 0.10.8)
+- **Email**: Nodemailer 7.0.3
+- **Logging**: Winston 3.17.0
+- **Testing**: Jest 30.0.2, Supertest 7.1.1
+
+### Frontend
+- **Framework**: React 19.1.1
+- **Build Tool**: Vite
+- **UI Library**: Material-UI (MUI) 7.3.1
+- **Routing**: React Router DOM 7.8.2
+- **HTTP Client**: Axios 1.11.0
+- **Charts**: Recharts 3.1.2
+- **Styling**: Emotion (CSS-in-JS)
+
+### Notification Service
+- **Runtime**: Node.js 18+
+- **Message Queue**: RabbitMQ (amqplib 0.10.3)
+- **Database**: PostgreSQL with Prisma ORM 6.14.0
+- **Email**: Nodemailer 6.9.8
+- **PDF Generation**: PDFKit 0.17.1
+
+### DevOps & Infrastructure
+- **Containerization**: Docker
+- **Orchestration**: Docker Compose
+- **Web Server**: Nginx (for frontend)
+- **Process Management**: PM2 (production)
 
 ---
 
@@ -192,6 +335,118 @@ The project follows DDD principles with clear separation of concerns:
 └── /admin                      # Admin functions (protected)
     └── [Admin routes]
 ```
+
+---
+
+## 🚀 API Endpoints
+
+### Base URL: `/api`
+
+### 🔐 Authentication Endpoints (`/api/auth`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/signup` | User registration | ❌ |
+| POST | `/auth/login` | User login | ❌ |
+| POST | `/auth/logout` | User logout | ✅ |
+| GET | `/auth/verifyToken` | Verify JWT token | ✅ |
+| POST | `/auth/forgot-password` | Request password reset | ❌ |
+| POST | `/auth/reset-password` | Reset password with token | ❌ |
+
+### 👤 Profile Endpoints (`/api/v1/profile`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/profile` | Get user profile | ✅ |
+| PUT | `/profile` | Update user profile | ✅ |
+
+### 🏪 Restaurant Management (`/api/v1/restaurants`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/restaurants` | Get all user's restaurants | ✅ |
+| POST | `/restaurants` | Create new restaurant | ✅ |
+| GET | `/restaurants/:restaurantId` | Get specific restaurant | ✅ |
+| PUT | `/restaurants/:restaurantId` | Update restaurant | ✅ |
+| DELETE | `/restaurants/:restaurantId` | Delete restaurant | ✅ |
+
+### 📊 Analytics (`/api/v1/restaurants/:restaurantId/analytics`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/analytics` | Get restaurant analytics | ✅ |
+
+### 👥 User Management (`/api/v1/restaurants/:restaurantId/user`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/user` | Get all restaurant users | ✅ |
+| POST | `/user` | Create new user | ✅ |
+| GET | `/user/:userId` | Get specific user | ✅ |
+| PUT | `/user/:userId` | Update user | ✅ |
+| DELETE | `/user/:userId` | Delete user | ✅ |
+
+### 🪑 Table Management (`/api/v1/restaurants/:restaurantId/table`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/table` | Get all restaurant tables | ✅ |
+| POST | `/table` | Create new table | ✅ |
+| GET | `/table/:tableId` | Get specific table | ✅ |
+| PUT | `/table/:tableId` | Update table | ✅ |
+| DELETE | `/table/:tableId` | Delete table | ✅ |
+| GET | `/table/search` | Search tables by keyword | ✅ |
+
+### 📋 Menu Management (`/api/v1/restaurants/:restaurantId/menu`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/menu` | Get restaurant menus | ✅ |
+| POST | `/menu` | Create new menu | ✅ |
+| GET | `/menu/:menuId` | Get specific menu | ✅ |
+| DELETE | `/menu/:menuId` | Delete menu | ✅ |
+
+### 🍽️ Menu Item Management (`/api/v1/restaurants/:restaurantId/menu/:menuId/menuItem`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/menuItem` | Get all menu items | ✅ |
+| POST | `/menuItem` | Create new menu item | ✅ |
+| GET | `/menuItem/:menuItemId` | Get specific menu item | ✅ |
+| PUT | `/menuItem/:menuItemId` | Update menu item | ✅ |
+| DELETE | `/menuItem/:menuItemId` | Delete menu item | ✅ |
+| PATCH | `/menuItem/:menuItemId/field` | Update specific field | ✅ |
+
+### 📅 Reservation Management (`/api/v1/restaurants/:restaurantId/reservations`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/reservations` | Get all reservations | ✅ |
+| POST | `/reservations` | Create new reservation | ✅ |
+| GET | `/reservations/search` | Search reservations | ✅ |
+| GET | `/reservations/:reservationId` | Get specific reservation | ✅ |
+| PUT | `/reservations/:reservationId` | Update reservation | ✅ |
+| DELETE | `/reservations/:reservationId` | Delete reservation | ✅ |
+| PUT | `/reservations/:reservationId/assign-table` | Assign table to reservation | ✅ |
+| PUT | `/reservations/:reservationId/completed` | Mark reservation as completed | ✅ |
+| PUT | `/reservations/:reservationId/cancel` | Cancel reservation | ✅ |
+
+### 🛒 Order Management (`/api/v1/restaurants/:restaurantId/reservations/:reservationId/order`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/order` | Create new order | ✅ |
+| GET | `/order/:orderId` | Get specific order | ✅ |
+| PUT | `/order/:orderId` | Update order | ✅ |
+| PUT | `/order/:orderId/complete` | Complete order | ✅ |
+| GET | `/order` | Get all orders for reservation | ✅ |
+
+### 💰 Bill Management (`/api/v1/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/bill` | Create bill for order | ✅ |
+| GET | `/bill/:billId` | Get specific bill | ✅ |
+| GET | `/bill/order/:orderId` | Get bill by order ID | ✅ |
+
+### 💳 Payment Management (`/api/v1/restaurants/:restaurantId/reservations/:reservationId/order/:orderId/bill/:billId/payment`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/payment` | Process payment | ✅ |
+
+### 🔧 Admin Endpoints (`/api/admin`)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/admin/*` | Admin panel routes | ✅ (Admin only) |
 
 ---
 
@@ -262,13 +517,104 @@ The project follows DDD principles with clear separation of concerns:
 
 ---
 
-## Environment Variables
-Key environment variables (see `env.example`):
-- `DATABASE_URL` - PostgreSQL connection string
-- `JWT_SECRET` - Secret key for JWT token signing
-- `JWT_EXPIRES_IN` - JWT token expiration time
-- `PORT` - Server port (default: 3000)
-- `NODE_ENV` - Environment (development/production)
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 13+
+- RabbitMQ 3.8+
+- Docker & Docker Compose (optional)
+
+### 1. Clone Repository
+```bash
+git clone <repository-url>
+cd Restofy
+```
+
+### 2. Backend Setup
+```bash
+cd back-end
+npm install
+cp env.example .env
+# Edit .env with your database and service configurations
+npx prisma migrate dev
+npx prisma generate
+npm run start:dev
+```
+
+### 3. Frontend Setup
+```bash
+cd front-end
+npm install
+cp .env.example .env
+# Edit .env with your API base URL
+npm run dev
+```
+
+### 4. Notification Service Setup
+```bash
+cd notification-service
+npm install
+cp .env.example .env
+# Edit .env with your configurations
+npx prisma migrate dev
+npx prisma generate
+npm run start:dev
+```
+
+### 5. Docker Setup (Alternative)
+```bash
+# From project root
+docker-compose up --build
+```
+
+---
+
+## 🔧 Environment Variables
+
+### Backend (.env)
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/restofy_db"
+
+# JWT
+JWT_SECRET="your-secret-key"
+JWT_EXPIRES_IN="1h"
+
+# RabbitMQ
+RABBITMQ_URL="amqp://localhost:5672"
+
+# Server
+PORT=3001
+NODE_ENV="development"
+
+# Frontend URL
+CLIENT_FRONTEND_URL="http://localhost:5173"
+```
+
+### Frontend (.env)
+```env
+VITE_API_BASE_URL="http://localhost:3001"
+```
+
+### Notification Service (.env)
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/notification_db"
+
+# RabbitMQ
+RABBITMQ_URL="amqp://localhost:5672"
+
+# Email
+EMAIL_USERNAME="your-email@gmail.com"
+EMAIL_PASSWORD="your-app-password"
+
+# JWT
+JWT_SECRET="your-secret-key"
+
+# Frontend URL
+CLIENT_FRONTEND_URL="http://localhost:5173"
+```
 
 ---
 
@@ -282,6 +628,47 @@ Key environment variables (see `env.example`):
 - **RestaurantStaff**: id, staffName, staffEmail, staffRole, restaurantId, ...
 
 See [`infrastructure/database/prisma/schema.prisma`](./infrastructure/database/prisma/schema.prisma) for full details.
+
+---
+
+## 🔐 Authentication & Authorization
+
+### User Roles
+- **Owner**: Full access to their restaurants
+- **Manager**: Full access within assigned restaurants
+- **Staff**: Limited access (read + specific updates)
+- **Customer**: Basic access for reservations
+
+### Permission System
+The system uses a granular permission-based access control:
+- `CAN_CREATE_RESTAURANT`
+- `CAN_VIEW_RESTAURANT`
+- `CAN_UPDATE_RESTAURANT`
+- `CAN_DELETE_RESTAURANT`
+- `CAN_CREATE_RESERVATION`
+- `CAN_VIEW_RESERVATION`
+- `CAN_UPDATE_RESERVATION`
+- `CAN_DELETE_RESERVATION`
+- `CAN_ASSIGN_RESERVATION_TO_TABLE`
+- `CAN_MARK_RESERVATION_COMPLETED`
+- `CAN_CANCEL_RESERVATION`
+- `CAN_SEARCH_RESERVATION`
+
+---
+
+## 🔄 Event-Driven Architecture
+
+### Message Flow
+1. **Backend** publishes events to RabbitMQ
+2. **Notification Service** consumes events
+3. **Email notifications** sent to users
+4. **Invoice PDFs** generated and attached
+
+### Event Types
+- Order created
+- Payment completed
+- Reservation confirmed
+- Bill generated
 
 ---
 
@@ -411,99 +798,72 @@ See `future.md` for planned features:
 
 ---
 
-## Contact
-Author: Mohit Kumar
----
+## 🚀 Deployment
 
-## Frontend
+### Production Build
+```bash
+# Backend
+cd back-end
+npm run build
+npm start
 
-The frontend is built with modern JavaScript frameworks and tools, located in the `front-end/` directory. It provides the user interface for restaurant owners, staff, and customers to interact with the Restofy platform.
+# Frontend
+cd front-end
+npm run build
+# Serve with Nginx
 
-- **Tech Stack:** Vite, React, modern JavaScript (ES6+), CSS
-- **Structure:**
-   - `src/` contains all React components, context providers, layouts, and assets
-   - `AuthPage/` for authentication-related pages (login, signup, password reset)
-   - `Component/` for reusable UI components (sidebar, main content, etc.)
-   - `Context/` for React context (auth, restaurant data)
-   - `Layout/` for page layouts and route management
-   - `public/` for static assets
-- **Features:**
-   - Authentication UI (login, signup, password reset)
-   - Restaurant and table management interfaces
-   - Responsive design
-   - State management with React Context
-   - Integration with backend APIs
+# Notification Service
+cd notification-service
+npm start
+```
 
----
-
-## Notification Service
-
-The notification service, found in the `notification-service/` directory, is responsible for handling and dispatching notifications (such as email, SMS, or in-app alerts) to users based on system events.
-
-- **Tech Stack:** Node.js, Prisma ORM
-- **Structure:**
-   - `src/` contains the main service logic, channels, dispatcher, jobs, queues, and utilities
-   - `prisma/` for database schema and migrations
-- **Features:**
-   - Channel-based notification dispatch (email, SMS, etc.)
-   - Job and queue management for asynchronous notification delivery
-   - Integration with external notification providers
-   - Extensible for future notification channels
+### Docker Deployment
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
 ---
 
-## Project Images
+## 🤝 Contributing
 
-Below are images used in the project, located in the `assets` directory:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-<div align="center">
+---
 
-<table>
-   <tr>
-      <td><img src="assets/image1.png" alt="image1" width="120"/></td>
-      <td><img src="assets/image2.png" alt="image2" width="120"/></td>
-      <td><img src="assets/image3.png" alt="image3" width="120"/></td>
-      <td><img src="assets/image4.png" alt="image4" width="120"/></td>
-      <td><img src="assets/image5.png" alt="image5" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image6.png" alt="image6" width="120"/></td>
-      <td><img src="assets/image7.png" alt="image7" width="120"/></td>
-      <td><img src="assets/image8.png" alt="image8" width="120"/></td>
-      <td><img src="assets/image9.png" alt="image9" width="120"/></td>
-      <td><img src="assets/image10.png" alt="image10" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image11.png" alt="image11" width="120"/></td>
-      <td><img src="assets/image12.png" alt="image12" width="120"/></td>
-      <td><img src="assets/image13.png" alt="image13" width="120"/></td>
-      <td><img src="assets/image14.png" alt="image14" width="120"/></td>
-      <td><img src="assets/image15.png" alt="image15" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image16.png" alt="image16" width="120"/></td>
-      <td><img src="assets/image17.png" alt="image17" width="120"/></td>
-      <td><img src="assets/image18.png" alt="image18" width="120"/></td>
-      <td><img src="assets/image19.png" alt="image19" width="120"/></td>
-      <td><img src="assets/image20.png" alt="image20" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image21.png" alt="image21" width="120"/></td>
-      <td><img src="assets/image22.png" alt="image22" width="120"/></td>
-      <td><img src="assets/image23.png" alt="image23" width="120"/></td>
-      <td><img src="assets/image24.png" alt="image24" width="120"/></td>
-      <td><img src="assets/image25.png" alt="image25" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image26.png" alt="image26" width="120"/></td>
-      <td><img src="assets/image27.png" alt="image27" width="120"/></td>
-      <td><img src="assets/image28.png" alt="image28" width="120"/></td>
-      <td><img src="assets/image29.png" alt="image29" width="120"/></td>
-      <td><img src="assets/image30.png" alt="image30" width="120"/></td>
-   </tr>
-   <tr>
-      <td><img src="assets/image31.png" alt="image31" width="120"/></td>
-   </tr>
-</table>
+## 📝 License
 
-</div>
+This project is licensed under the ISC License.
+
+---
+
+## 👨‍💻 Author
+
+**Mohit Kumar**
+- GitHub: [@mokumar](https://github.com/mokumar)
+- Email: itsmohit2022@gmail.com
+
+---
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the `BLOCKERS.md` for known issues
+- Review the `LEARNING_GUIDE.md` for development resources
+
+---
+
+## 🔮 Future Enhancements
+
+See `future.md` for planned features:
+- Real-time notifications with WebSockets
+- Mobile app development
+- Advanced analytics dashboard
+- Multi-language support
+- Integration with payment gateways
+- Inventory management
+- Staff scheduling system

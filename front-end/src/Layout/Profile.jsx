@@ -11,6 +11,7 @@ import {
   Paper,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
+import { getProfile } from "../utils/api";
 
 function Profile() {
   const { authState } = useContext(AuthContext);
@@ -19,18 +20,19 @@ function Profile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal; 
+
     const fetchProfile = async () => {
       if (!email) return;
       setLoading(true);
 
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/profile`,
-          { withCredentials: true }
-        );
-        setProfile(res.data.data);
+        const res = await getProfile(signal);
+        res.data?setProfile(res.data):setProfile(null);
       } catch (error) {
         setProfile(null);
+        console.error("Error fetching profile:", error);
       }
       setLoading(false);
     };

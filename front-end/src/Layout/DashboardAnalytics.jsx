@@ -26,7 +26,7 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import PaymentIcon from "@mui/icons-material/Payment";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
-import axios from "axios";
+import { getAnalytics } from "../utils/api";
 
 function DashboardAnalytics({ restaurant }) {
   const [analytics, setAnalytics] = useState(null);
@@ -35,18 +35,29 @@ function DashboardAnalytics({ restaurant }) {
   useEffect(() => {
     if (!restaurant) return;
     setLoading(true);
-    axios
-      .get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-          restaurant.restaurantId
-        }/analytics`,
-        { withCredentials: true }
-      )
-      .then((res) => {
-        setAnalytics(res.data.data);
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    const fetchAnalytics = async () => {
+      try {
+        const res = await getAnalytics(
+          { restaurantId: restaurant.restaurantId },
+          signal
+        );
+        if (res.status === 200) {
+          setAnalytics(res.data);
+        }
+      } catch (error) {
+        setAnalytics(null);
+        console.log("Error fetching analytics:", error);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchAnalytics();
+
+    return () => abortController.abort();
   }, [restaurant]);
 
   if (!restaurant) {
@@ -90,16 +101,16 @@ function DashboardAnalytics({ restaurant }) {
 
   return (
     <Box sx={{ pb: 4, mb: 8, minHeight: "100vh" }}>
-      <Box >
-      <Typography
-        variant="h5"
-        gutterBottom
-        sx={{ fontWeight: 600, color: "#2e3b55" }}
-      >
-        <TrendingUpIcon
-          sx={{ mr: 1, verticalAlign: "middle", color: "#43a047" }}
-        />
-        Restaurant Analytics Dashboard
+      <Box>
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{ fontWeight: 600, color: "#2e3b55" }}
+        >
+          <TrendingUpIcon
+            sx={{ mr: 1, verticalAlign: "middle", color: "#43a047" }}
+          />
+          Restaurant Analytics Dashboard
         </Typography>
       </Box>
       <Box>

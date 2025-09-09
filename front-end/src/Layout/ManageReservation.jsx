@@ -28,6 +28,11 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Chip from "@mui/material/Chip";
+import {
+  cancelReservation,
+  deleteReservation,
+  getReservationById,
+} from "../utils/api";
 
 function getStatusColor(status) {
   switch (status) {
@@ -56,17 +61,21 @@ function ManageReservation() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchReservation = async () => {
       if (!selectedRestaurant) return;
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-            selectedRestaurant.restaurantId
-          }/reservations/${reservationId}`,
-          { withCredentials: true }
+        const res = await getReservationById(
+          {
+            restaurantId: selectedRestaurant.restaurantId,
+            reservationId,
+          },
+          signal
         );
-        setReservation(res.data.data);
+
+        res.data ? setReservation(res.data) : setReservation(null);
       } catch (err) {
         setReservation(null);
         console.log(err);
@@ -74,18 +83,17 @@ function ManageReservation() {
       setLoading(false);
     };
     fetchReservation();
+    return () => abortController.abort();
   }, [selectedRestaurant, reservationId]);
 
   const handleCancelReservation = async () => {
     setActionLoading(true);
     try {
-      await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-          selectedRestaurant.restaurantId
-        }/reservations/${reservation.id}/cancel`,
-        {},
-        { withCredentials: true }
-      );
+      await cancelReservation({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId: reservation.id,
+      });
+
       setReservation((prev) => ({ ...prev, status: "Cancelled" }));
     } catch (err) {
       console.log(err);
@@ -97,12 +105,10 @@ function ManageReservation() {
   const handleDeleteReservation = async () => {
     setActionLoading(true);
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${
-          selectedRestaurant.restaurantId
-        }/reservations/${reservation.id}`,
-        { withCredentials: true }
-      );
+      await deleteReservation({
+        restaurantId: selectedRestaurant.restaurantId,
+        reservationId: reservation.id,
+      });
       navigate("/reservations");
     } catch (err) {
       console.log(err);
@@ -154,7 +160,10 @@ function ManageReservation() {
       >
         {/* Left: Reservation Details in Card */}
         <Box sx={{ flex: 1, minWidth: 340 }}>
-          <Card variant="outlined" sx={{ mb: 2, p: 0, position: "relative",borderRadius: "8px" }}>
+          <Card
+            variant="outlined"
+            sx={{ mb: 2, p: 0, position: "relative", borderRadius: "8px" }}
+          >
             {/* Edit & Delete icons on top-right */}
             <Box
               sx={{
@@ -166,7 +175,7 @@ function ManageReservation() {
                 gap: 1,
               }}
             >
-            {reservation.status !== "Completed" && (
+              {reservation.status !== "Completed" && (
                 <Button
                   size="small"
                   color="primary"
@@ -176,17 +185,17 @@ function ManageReservation() {
                 >
                   <EditIcon />
                 </Button>
-            )}
-            <Button
-              size="small"
-              color="error"
-              onClick={() => setOpenDeleteDialog(true)}
-              sx={{ minWidth: 0, p: 1, borderRadius: "50%" }}
-              disabled={actionLoading}
+              )}
+              <Button
+                size="small"
+                color="error"
+                onClick={() => setOpenDeleteDialog(true)}
+                sx={{ minWidth: 0, p: 1, borderRadius: "50%" }}
+                disabled={actionLoading}
               >
-              <DeleteIcon />
-            </Button>
-              </Box>
+                <DeleteIcon />
+              </Button>
+            </Box>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 <AssignmentTurnedInIcon

@@ -30,6 +30,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
+import { createMenu, getAllMenuItems, getMenu } from "../utils/api";
 
 
 function MenuItems() {
@@ -60,25 +61,29 @@ function MenuItems() {
   // Fetch menu for the selected restaurant
   useEffect(() => {
     if (!selectedRestaurant) return;
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     const fetchMenu = async () => {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-          { withCredentials: true }
+        const res = await getMenu(
+          { restaurantId: selectedRestaurant.restaurantId },
+          signal
         );
-        setMenu(res.data.data);
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setMenu(null);
-        } else {
-          setError("Failed to fetch menu.");
+        if (res.status === 200) {
+          setMenu(res.data);
         }
+      } catch (err) {
+        console.log(err);
+        setMenu(null);
+        setError(err.message || "Failed to fetch menu.");
       }
       setLoading(false);
     };
     fetchMenu();
+    return () => abortController.abort();
   }, [selectedRestaurant]);
 
   // Fetch menu items if menu exists
@@ -87,19 +92,22 @@ function MenuItems() {
       setMenuItems([]);
       return;
     }
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchMenuItems = async () => {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem`,
-          { withCredentials: true }
+        const res = await getAllMenuItems(
+          { restaurantId: selectedRestaurant.restaurantId, menuId: menu.id },
+          signal
         );
-        setMenuItems(res.data.data || []);
+        if (res.status === 200 && res.data) {
+          setMenuItems(res.data || []);
+        }
       } catch (err) {
         setMenuItems([]);
-        setError("Failed to fetch menu items.");
-        console.log(err);
+        setError(err.message || "Failed to fetch menu items.");
       }
       setLoading(false);
     };
@@ -111,16 +119,14 @@ function MenuItems() {
     setCreatingMenu(true);
     setError("");
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-        {}, // Add menu data if needed
-        { withCredentials: true }
-      );
-      setMenu(res.data.data);
+      const res = await createMenu(
+          { restaurantId: selectedRestaurant.restaurantId }
+        );
+      if (res.status === 201 && res.data) {
+        setMenu(res.data);
+      }
     } catch (err) {
-      setError("Failed to create menu.");
-      console.log(err);
-
+      setError(err.message || "Failed to create menu.");
     }
     setCreatingMenu(false);
   };
@@ -161,6 +167,7 @@ function MenuItems() {
       </Box>
     );
   }
+
 
   return (
     <Box sx={{ p: 2 }}>
@@ -207,15 +214,14 @@ function MenuItems() {
         <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
-      ) : error ? (
-        <Box sx={{ textAlign: "center", my: 4 }}>
-          <Typography color="error">{error}</Typography>
-        </Box>
       ) : !menu ? (
         <Box sx={{ textAlign: "center", my: 4 }}>
-          <Typography sx={{ mb: 2 }} color="warning.main">
-            No menu found for this restaurant.
-          </Typography>
+          {error && (
+            <Typography color="warning.main" sx={{ mb: 2 }}>
+              {error ? error : "No menu found for this restaurant."}
+            </Typography> 
+          )}
+
           <Button
             variant="contained"
             onClick={handleCreateMenu}

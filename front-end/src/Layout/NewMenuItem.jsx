@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import MenuItemForm from "./MenuItemForm";
+import { createMenuItem, getMenu } from "../utils/api";
 
 function NewMenuItem() {
   const { selectedRestaurant } = useContext(RestaurantContext);
@@ -22,20 +23,23 @@ function NewMenuItem() {
 
   // Fetch menu on mount
   React.useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const fetchMenu = async () => {
       if (!selectedRestaurant) return;
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu`,
-          { withCredentials: true }
-        );
-        setMenu(res.data.data);
+        const res = await getMenu({ restaurantId: selectedRestaurant.restaurantId }, signal);
+
+        if (res.status === 200 && res.data) {
+          setMenu(res.data);
+        }
       } catch (err) {
         setMenu(null);
-        console.log(err);
+        setError(err.message || "Failed to fetch menu.");
       }
     };
     fetchMenu();
+    return () => abortController.abort();
   }, [selectedRestaurant]);
 
   const handleInputChange = (e) => {
@@ -68,11 +72,19 @@ function NewMenuItem() {
           withCredentials: true,
         }
       );
-      setSuccess("Menu item created!");
-      setTimeout(() => navigate("/menu-items"), 1200);
+      const res= await createMenuItem({
+        restaurantId: selectedRestaurant.restaurantId,
+        menuId: menu.id,
+        data:{...form, itemPrice: Number(form.itemPrice)}
+      });
+      if(res.status === 201) {
+
+        setSuccess(res.message || "Menu item created!");
+        setTimeout(() => navigate("/menu-items"), 1000);
+      }
     } catch (err) {
       setError(
-        err.response?.data?.message || "Failed to create menu item."
+        err.message || "Failed to create menu item."
       );
       setSuccess("");
     }

@@ -29,6 +29,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { deleteRestaurant, getAllRestaurants } from '../utils/api';
 
 function Restaurant() {
   const [restaurants, setRestaurants] = useState([]);
@@ -43,21 +44,19 @@ function Restaurant() {
   const [viewMode, setViewMode] = useState("card");
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchRestaurant = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-            withCredentials: true,
-          });
-        setRestaurants(Array.isArray(response.data.data) ? response.data.data : [response.data.data]);
+        const response = await getAllRestaurants(signal);
+        setRestaurants(response.data || []);
       } catch (error) {
         console.error("Error fetching restaurant data:", error);
       }
     };
     fetchRestaurant();
+    return () => controller.abort();
   }, []);
 
   const handleSelectedRestaurant = (restaurant) => {
@@ -77,10 +76,8 @@ function Restaurant() {
   const handleDeleteConfirm = async () => {
     if (!restaurantToDelete) return;
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${restaurantToDelete.restaurantId}`,
-        { withCredentials: true }
-      );
+      await deleteRestaurant({ restaurantId: restaurantToDelete.restaurantId });
+
       setRestaurants((prev) =>
         prev.filter((r) => r.restaurantId !== restaurantToDelete.restaurantId)
       );

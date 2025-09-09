@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import MenuItemForm from "./MenuItemForm";
 import { createMenuItem, getMenu } from "../utils/api";
@@ -61,17 +60,6 @@ function NewMenuItem() {
     }
     setIsSubmitting(true);
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem`,
-        {
-          ...form,
-          itemPrice: Number(form.itemPrice),
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
       const res= await createMenuItem({
         restaurantId: selectedRestaurant.restaurantId,
         menuId: menu.id,

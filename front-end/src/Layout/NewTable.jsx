@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import TableForm from "./TableForm";
 import { createNewTable } from "../utils/api";

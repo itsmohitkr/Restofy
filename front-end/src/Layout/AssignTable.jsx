@@ -12,7 +12,6 @@ import TableRestaurantIcon from "@mui/icons-material/TableRestaurant";
 import GroupIcon from "@mui/icons-material/Group";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import axios from "axios";
 import { assignReservationToTable, getAvailableTables } from "../utils/api";
 
 function AssignTable() {

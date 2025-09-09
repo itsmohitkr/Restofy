@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import axios from "axios";
 import {
   Box,
   Button,
@@ -30,7 +29,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from "@mui/icons-material/Search";
-import { createMenu, getAllMenuItems, getMenu } from "../utils/api";
+import { createMenu, deleteMenuItem, getAllMenuItems, getMenu } from "../utils/api";
 
 
 function MenuItems() {
@@ -137,10 +136,11 @@ function MenuItems() {
     setDeleting(true);
     setError("");
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/restaurants/${selectedRestaurant.restaurantId}/menu/${menu.id}/menuItem/${itemToDelete}`,
-        { withCredentials: true }
-      );
+      await deleteMenuItem({
+        restaurantId: selectedRestaurant.restaurantId,
+        menuId: menu.id,
+        menuItemId: itemToDelete,
+      });
       setMenuItems((prev) => prev.filter((item) => item.id !== itemToDelete));
       setDeleteDialogOpen(false);
       setItemToDelete(null);

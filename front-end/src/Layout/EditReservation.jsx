@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import ReservationForm from "./ReservationForm";
 import { getReservationById, updateReservation } from "../utils/api";

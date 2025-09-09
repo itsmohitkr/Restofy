@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
 import { RestaurantContext } from "../Context/RestaurantContext";
 import {
   Box,

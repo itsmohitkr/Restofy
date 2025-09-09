@@ -16,7 +16,6 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { RestaurantContext } from "../Context/RestaurantContext";
-import axios from "axios";
 import { createOrder, getAllMenuItems, getAllOrders, getMenu, updateOrder } from "../utils/api";
 
 function TakeOrder() {

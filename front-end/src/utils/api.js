@@ -1,16 +1,3 @@
-// finalize an order
-export async function finalizeOrder(params) {
-  const url = new URL(
-    `${API_BASE_URL}/api/v1/restaurants/${params.restaurantId}/reservations/${params.reservationId}/order/${params.orderId}/complete`
-  );
-  const options = {
-    method: "PUT",
-    headers,
-    credentials: "include",
-  };
-  return await fetchJson(url, options, []);
-}
-
 const API_BASE_URL = "http://localhost:3001";
 
 async function fetchJson(url, options = {}, onCancel) {
@@ -206,7 +193,6 @@ export async function getTableById(params, signal) {
   const options = { headers, credentials: "include", signal };
   return await fetchJson(url, options, []);
 }
-
 // Update table details
 export async function updateTable(params) {
   const url = new URL(
@@ -428,3 +414,29 @@ export async function createOrder(params) {
   };
   return await fetchJson(url, options, []);
 }
+
+// delete menu item
+export async function deleteMenuItem(params) {
+  const url = new URL(
+    `${API_BASE_URL}/api/v1/restaurants/${params.restaurantId}/menu/${params.menuId}/menuItem/${params.menuItemId}`
+  );
+  const options = {
+    method: "DELETE",
+    headers,
+    credentials: "include",
+  };
+  return await fetchJson(url, options, []);
+}
+// finalize an order
+export async function finalizeOrder(params) {
+  const url = new URL(
+    `${API_BASE_URL}/api/v1/restaurants/${params.restaurantId}/reservations/${params.reservationId}/order/${params.orderId}/complete`
+  );
+  const options = {
+    method: "PUT",
+    headers,
+    credentials: "include",
+  };
+  return await fetchJson(url, options, []);
+}
+
